@@ -1,0 +1,666 @@
+<html>
+<body style="padding: 100px;">
+	<style>
+		ol li {
+			position: relative;
+			font-family: helvetica;
+		}
+	    ol li:nth-child(-n+8) {
+	        color: darkcyan;
+	    }
+	    ol li.isOnWatchlist {
+	    	outline: 1px dashed orange;
+	    }
+	    ol li.isOnIgnorelist {
+	    	opacity: 0.5;
+	    }
+	    button {
+	    	background: none;
+		    border: 1px solid #ddd;
+		    border-radius: 5px;
+		    color: white;
+	    }
+	    body {
+    	    padding: 100px;
+		    font-weight: 100;
+		    /*font-family: avenir;*/
+	        /*background: black;
+    		color: #690000;*/
+    		background: #00202a;
+    		/*color: #692300;*/
+    		color: #852c00;
+		    font-family: "Perfect DOS VGA 437";
+	    }
+	    h1 {
+	    	font-size: 3rem;
+	    	text-shadow: 0 0 7px red;
+			color: red;
+		    font-family: "Perfect DOS VGA 437";
+	    }
+	    h1, h2 {
+		    text-transform: uppercase;
+			letter-spacing: .75rem;
+	    }
+	    h1:before {
+	    	content: "\\\\\\\\ ";
+	    }
+	    h1:after {
+	    	content: " ////";
+	    }
+		.is-on-futures-list:before {
+			content: "FUTURES";
+			position: absolute;
+			font-size: 7px;
+			left: -62px;
+			width: 50px;
+			top: 6px;
+			color: yellow;
+			font-weight: 900;
+			font-family: sans-serif;
+		}
+    </style>
+<script>
+
+	// U T I L  F U N C S
+	var pc = (a, b) => {
+	    if (a === b) return 0; // avoid any floating point crazyness
+	    return (100 - (b / (a / 100))) * -1;
+	}
+	var changeByXPercent = (targ, perc) => (((perc / 100) + 1) * targ);
+	var avcan = (array, includeCurrentCandle = false, onlyUpperRange = false) => {
+	    const lowIndex = onlyUpperRange ? 1 : 3;
+	    const ranges = array.map(c => {
+	        return pc(parseFloat(c[lowIndex]), parseFloat(c[2]))
+	    });
+	    const rangesNew = includeCurrentCandle ? ranges : ranges.slice(0, ranges.length - 1);
+	    return rangesNew.reduce((a, b) => a + b, 0) / ranges.length
+	}
+
+	class MovAvg {
+	    constructor(interval) {
+	        this.interval = interval;
+	        this.priceHistory = [];
+	        this.valueHistory = [];
+	    }
+
+	    addNewPrice(price) {
+	        this.priceHistory.push(price);
+	        if (this.priceHistory.length < this.interval) return;
+	        const slicedRange = this.priceHistory.slice(this.priceHistory.length - this.interval, this.priceHistory.length);
+	        const currentAvg = slicedRange.reduce((a, cv) => a + cv) / slicedRange.length
+	        this.valueHistory.push(currentAvg);
+	    }
+
+	    mostRecentValue(num = 1) {
+	        if (num > this.valueHistory.length) {
+	            return this.valueHistory;
+	        }
+	        const lastIndex = this.valueHistory.length;
+	        return this.valueHistory.slice(lastIndex - num, lastIndex);
+	    }
+
+	    mostRecentChange() {
+	        if (this.valueHistory < 2) return 0;
+	        const r = this.mostRecentValue(2);
+	        return pc(r[0], r[1]);
+	    }
+	}
+
+	// W I T H  N O  T R A D I N G  A B O V E  M A 1 0 0
+	// still making profit, but how many more mistakes have I made :-/
+	// MA 20 20 30 with UP coins on 1 hour candles seems to make a lot of profit
+	var runSim = (a = 3, b = 30, c = 100) => {
+		var rolloverHi = null;
+		var rolloverLo = null;
+		var buyPrice = null;
+		var funds = 100;
+		var loPercentOfRange = 100;
+		var hiPercentOfRange = 90;
+		var requiredMa3Change = 0.1;
+		var requiredMa15Change = 0.1;
+		var requiredMaLongChange = -999999999;
+		var win = 0;
+		var lose = 0;
+		var MA3 = new MovAvg(a);
+		var MA15 = new MovAvg(b);
+		var MALong = new MovAvg(c);
+		var timestamps = [];
+		var transaction = (money, percent) => {
+		    const newPercent = percent - 0.2;
+		    console.log('money, percent, newPercent', money, percent, newPercent);
+		    console.log('• • • percent ', ((newPercent / 100) + 1), ' • • • bank ', money * ((newPercent / 100) + 1));
+		    return money * ((newPercent / 100) + 1);
+		    // const newPercentShortingMimick = (newPercent * -1);
+		    // return money * ((newPercentShortingMimick / 100) + 1);
+		};
+		var arr = x.map((candle, index) => {
+		    MA3.addNewPrice(parseFloat(candle[1]));
+		    MA15.addNewPrice(parseFloat(candle[1]));
+		    MALong.addNewPrice(parseFloat(candle[1]));
+		    //console.log('value, ', MA3.mostRecentValue()[0], 'change%: ', MA3.mostRecentChange());
+		    if (index < 10) return;
+		    if (rolloverHi) {
+		        if (candle[3] < rolloverLo) {
+		            var msg = `LOSE (after rollover of ${rolloverLo})`;
+		            funds = transaction(funds, pc(buyPrice[1], rolloverLo));
+		            console.log('T I M E S T A M P 1', new Date(buyPrice[0]), 'sold ', new Date(candle[0]));
+		            timestamps.push(`Lose, ${new Date(buyPrice[0])} - R O L L O V E R - sold on ${new Date(candle[0])}`);
+		            rolloverHi = null;
+		            rolloverLo = null;
+		            buyPrice = null;
+		            lose++;
+		            return msg;
+		        }
+		        if (candle[2] > rolloverHi) {
+		            var msg = `WIN (after rollover of ${rolloverHi})`;
+		            funds = transaction(funds, pc(buyPrice[1], rolloverHi));
+		            console.log('T I M E S T A M P 2', new Date(buyPrice[0]), 'sold ', new Date(candle[0]));
+		            timestamps.push(`Win, ${new Date(buyPrice[0])} - R O L L O V E R - sold on ${new Date(candle[0])}`);
+		            rolloverHi = null;
+		            rolloverLo = null;
+		            buyPrice = null;
+		            win++;
+		            return msg;
+		        }
+		        return `N/A (rollover continues ${rolloverHi}, ${rolloverLo})`;
+		    }
+		    if (MA3.mostRecentChange() < requiredMa3Change || MA15.mostRecentChange() < requiredMa15Change || MALong.mostRecentValue() < candle[1]) {
+		        //console.log('not enough MA increase', MA3.mostRecentChange());
+		        return;
+		    }
+		    buyPrice = candle;
+		    var avRange = avcan(x.slice(index - 11, index));
+		    var lo = (avRange / 100) * loPercentOfRange;
+		    var hi = (avRange / 100) * hiPercentOfRange;
+		    var beyondLower = pc(candle[1], candle[3]) * -1 > lo;
+		    var beyondUpper = pc(candle[1], candle[2]) > hi;
+		    //console.log('clo', pc(candle[1], candle[3]) * -1, 'lo', lo, 'chi', pc(candle[1], candle[2]), 'hi', hi, 'avRange', avRange);
+		    if (beyondLower) {
+		        lose++;
+		        funds = transaction(funds, (lo * -1));
+		        console.log('T I M E S T A M P 3', new Date(candle[0]));
+		        timestamps.push(`Lose, ${new Date(candle[0])}`);
+		        buyPrice = null;
+		        return "LOSE";
+		    } else if (!beyondLower & beyondUpper) {
+		        win++;
+		        funds = transaction(funds, hi);
+		        console.log('T I M E S T A M P 4', new Date(candle[0]));
+		        timestamps.push(`Win, ${new Date(candle[0])}`);
+		        buyPrice = null;
+		        return "WIN";
+		    } else {
+		        rolloverHi = candle[1] * ((hi / 100) + 1);
+		        rolloverLo = candle[1] * ((100 - lo) / 100);
+		        //console.log(`candle ${candle[1]} hi ${rolloverHi} lo ${rolloverLo}`);
+		        return "N/A"
+		    }
+		});
+		console.log(`win ${win}, lose ${lose}`);
+		winLoseIndicator.innerText = `win ${win}, lose ${lose}`;
+		fundsIndicator.innerText = `${funds} (funds)`;
+		transactionIndicator.innerHTML = timestamps.join('&#10;');
+	}
+
+	var x = null;
+
+	var getCandles = (url) => {
+		fetch(url).then((data) => data.json()).then((json) => {
+			console.log('• • • • ', json);
+			x = json;
+			runSim(parseInt(inputA.value), parseInt(inputB.value), parseInt(inputC.value))
+		}).catch(e => console.log(e.message))
+	}
+
+	var swingAnalyser = (candleList, interval = 5) => {
+	    var allSamples = candleList.filter((c, i) => (i % interval === 0));
+	    var positives = [];
+	    var negatives = [];
+	    var avPos = null;
+	    var avNeg = null;
+	    var ratio = null;
+	    allSamples.map((c, i) => {
+	        if(!allSamples[i + 1]) return;
+	        var theChange = pc(parseFloat(c[1]), parseFloat(allSamples[i + 1][1]));
+	        if(theChange > 0) {
+	            positives.push(theChange);
+	        }else {
+	            negatives.push(theChange);
+	        }
+	    });
+	    var avPos = positives.reduce((a, b) => a + b);
+	    var avNeg = negatives.reduce((a, b) => a + b);
+	    var summed = avPos + avNeg;
+	    return {avPos, avNeg, summed};
+	}
+
+	var createWeightedGainScore = (arr, negativeWeightingMultiplier = 1.5) => {
+		return arr.reduce((p,c,i,a) => {
+			// create Weighted Gain Score™
+			// NOTE: all percentages here need to be compared to the start, not the previous value
+			if(typeof p === 'object') return 100;
+			const percChange = pc(a[i - 1][4], parseFloat(c[4]));
+			if(percChange < 0) return p + (percChange * negativeWeightingMultiplier)
+			console.log('• • • • ', p, percChange);
+			return p + percChange;
+		})
+	};
+	
+	var createFluctuationScore = (arr) => {
+		
+		//LOL EVEN NEWER THING
+		var prevHigh = 0;
+		var newHighCount = 0;
+		arr.map(can => {
+		    if(can[4] > prevHigh){
+		        prevHigh = can[4];
+		        newHighCount++;
+		    }
+		})
+		return newHighCount;
+		//LOLL
+
+		// LOL NEW THING
+		/*
+		var greenCount = 0;
+		arr.map((can) => {
+		    if(can[1] > can[4]) greenCount++;
+		})
+		return greenCount;
+		*/
+		// LOL
+
+
+		// does this even make sense? if you look at it over 4 hours compared to 30 mins the ratio of the fluctuation score to the total gain is going to be way higher just because it's had hours to fluctuate. Does it make more sense to literally just give a ratio of negative to positive over a specific time?
+		return arr.reduce((prev,c,i,a) => {
+			const ultimateChange = pc(parseFloat(a[0][1]), parseFloat(a[a.length - 1][4]));
+			let p = prev;
+			if(typeof p === 'object') {
+var danumba = pc(parseFloat(a[0][1]), parseFloat(a[0][4])); // the first step will be otherwise be missed because there is no previous value to compare it to.
+//console.log('danumba: ',danumba);
+				//return danumba;
+				p = danumba;
+			}
+			const currentChangeFromStart = pc(parseFloat(a[0][1]), parseFloat(c[4]));
+			const previousChangeFromStart = pc(parseFloat(a[0][1]), parseFloat(a[i - 1][4]));
+			const newChange =  currentChangeFromStart - previousChangeFromStart;
+			// console.log(newChange, currentChangeFromStart, previousChangeFromStart, ' - ', ultimateChange);
+			// console.log('changeeitherway: ', Math.abs(0 - newChange));
+			
+			// D I F F E R E N T  R E T U R N  V A L U E S • • • • • • • • • • 
+			//return p + Math.abs(0 - newChange); <--- this is supposedly how you return the amount fluctuated up or down in terms of total percentage movement either way, the numbers coming out of it look suspect though.
+			
+			//return p + newChange; //<--- this is how you return the exact same result as ultimateChange (the total loss or cain from the entire candle sequence) fyi you would need to remove any processing after this .reduce()
+
+			const newChangeWithNegativeMultiplier = newChange < 0 ? newChange * 1.1 : newChange;
+			if(i === (a.length - 1)){
+				console.log('LAST');
+				return (p + newChangeWithNegativeMultiplier); //<--- this is how you return the exact same result as ultimateChange (the total loss or cain from the entire candle sequence) fyi you would need to remove any processing after this .reduce()
+			}else {
+				return p + newChangeWithNegativeMultiplier; //<--- this is how you return the exact same result as ultimateChange (the total loss or cain from the entire candle sequence) fyi you would need to remove any processing after this .reduce()
+			}
+			
+			// if(i === (a.length - 1)){
+			// 	console.log('LAST');
+			// 	return p + Math.abs(0 - newChange) - ultimateChange;
+			// }else {
+				return p + Math.abs(0 - newChange);
+			//}
+		})
+	};
+
+	var createPercentGainToPercentTraveledScore = (arr) => {
+		var percentTraveled = 0;
+		var percentGain = pc(arr[0][1], arr[arr.length - 1][4])
+		arr.map((can) => {
+		    const p = pc(can[1], can[4]);
+		    const alwaysPositive = p < 0 ? p * -1 : p;
+		    percentTraveled += alwaysPositive
+		})
+		return pc(percentGain, percentTraveled)
+	}
+
+	// get futures list, may as well just do it once since it's not something that will change a lot
+	window.usdtListFutures = [];
+	fetch('https://fapi.binance.com/fapi/v1/exchangeInfo').then(data => data.json()).then((i) => {
+		window.usdtListFutures = i.symbols.filter((p) => p.quoteAsset === "USDT" && p.status === "TRADING")
+	}).catch(e => console.log("problem getting coins traded on futures", e.message));
+
+	var getTopMovers = (minutes = 60, candleInterval = "1m") => {
+		fetch('https://api.binance.com/api/v3/exchangeInfo').then(data => data.json()).then((i) => {
+			var usdtList = i.symbols.filter((p) => p.quoteAsset === "USDT" && p.status === "TRADING")
+			Promise.all(usdtList.map((p) => {
+				return fetch(`https://api.binance.com/api/v3/klines?symbol=${p.symbol}&interval=${candleInterval}&limit=${minutes}`).then(data => data.json()).then(candles => ({pair: p, candles})).catch(e => e.message)
+				//return fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${p.symbol}&interval=1m&limit=${minutes}`).then(data => data.json()).then(candles => ({ pair: p, candles })).catch(e => e.message)
+			})).then((values) => {
+				console.log('• • • • ', values)
+				try {
+					var swingAnalysed = values.map(c => ({swingingAnal: swingAnalyser(c.candles), pairInfo: c.pair}));
+					console.log('• • • • S W I N G  A N A L • • • •', swingAnalysed.sort((a, b) => (a.swingingAnal.summed * -1 - b.swingingAnal.summed * -1)));
+				}catch(err) {
+					console.log('Error with swinging anal: ', err.message);
+				}
+				//var asText = values.map(x => `${x.pair.symbol}: 1 hour ago ${x.candles[0][1]}, now ${x.candles[minutes - 1][4]}`);
+				var withPercent = values.map(x => ({...x, percentChange: pc(x.candles[0][1], x.candles[(x.candles.length < minutes ? x.candles.length : minutes) - 1][4])}));
+			    //topMovers.innerHTML = asText.join('&#10;');
+				var withWeightedGainScore = withPercent.map(x => ({...x, weightedGainScore: createWeightedGainScore(x.candles, 10)}));
+				var withFluctuationScore = withPercent.map(x => ({...x, fluctuationScore: createFluctuationScore(x.candles)}));
+				var withCreatePercentGainToPercentTraveledScore = withPercent.map(x => ({...x, percentGainToPercentTraveledScore: createPercentGainToPercentTraveledScore(x.candles)}));
+			    var resultsSorted = withCreatePercentGainToPercentTraveledScore.sort((a, b) => (a.percentChange * -1) - (b.percentChange * -1));
+				var futuresLabel = (s) => window.usdtListFutures.findIndex(f => f.symbol === s) > -1 ? "is-on-futures-list" : "";
+
+			    topMovers.innerHTML = resultsSorted.map(x => `<li id="${x.pair.symbol}" class="${futuresLabel(x.pair.symbol)}"><span onclick="toggleWatchlist('${x.pair.symbol}')">${x.pair.symbol}: ${x.percentChange}&nbsp;(weighted gain: ${x.weightedGainScore})&nbsp;(${x.fluctuationScore}) [percent traveled (the lower the number the more direct the gain or loss)${x.percentGainToPercentTraveledScore}]</span><button onclick="toggleIgnorelist('${x.pair.symbol}')">ignore</button></li>`).join('');
+			    updateWatchlistClasses();
+			    updateIgnorelistClasses();
+			});
+		}).catch(e => console.log(e.message));
+	}
+
+	var theWatchlist = JSON.parse(localStorage.getItem('watchlist')) || [];
+
+	var updateWatchlistClasses = () => {
+
+		[...document.querySelectorAll('.isOnWatchlist')].map(x => x.classList.remove('isOnWatchlist'))
+
+		theWatchlist.map((sym) => {
+			var el = document.querySelector('#' + sym);
+			el.classList.add('isOnWatchlist');
+		});
+	}
+
+	var toggleWatchlist = (str) => {
+		var i = theWatchlist.findIndex(a => a === str);
+		if(i === -1) {
+		    theWatchlist.push(str);
+		    updateWatchlistClasses();
+		}else {
+		    theWatchlist.splice(i, i + 1);
+		    updateWatchlistClasses();
+		}
+		localStorage.setItem('watchlist', JSON.stringify(theWatchlist))
+		watchlist.innerHTML = JSON.stringify(theWatchlist);
+	}
+
+	var clearWatchlist = () => {
+		theWatchlist = [];
+		updateWatchlistClasses();
+	}
+
+	var addThoseWithDownToWatchList = () => {
+		/*
+			because IDs can't start with a number this doesn't work >:-0
+			var withDown = [...document.querySelectorAll('li')].filter((el) => el.innerText.includes('DOWNUSDT'));
+			var withDownProcessed = withDown.map((el => el.id.replace('DOWN', '')));
+			document.querySelectorAll(`#${withDownProcessed.join(', #')}`).addClass('isOnWatchlist');
+			updateWatchlistClasses();
+		*/
+	}
+
+	// clumsily copied watchlist code - - - - - - - - 
+					var theIgnorelist = JSON.parse(localStorage.getItem('ignorelist')) || [];
+
+					var updateIgnorelistClasses = () => {
+
+						[...document.querySelectorAll('.isOnIgnorelist')].map(x => x.classList.remove('isOnIgnorelist'))
+
+						theIgnorelist.map((sym) => {
+							var el = document.querySelector('#' + sym);
+							el.classList.add('isOnIgnorelist');
+						});
+					}
+
+					var toggleIgnorelist = (str) => {
+						var i = theIgnorelist.findIndex(a => a === str);
+						if(i === -1) {
+						    theIgnorelist.push(str);
+						    updateIgnorelistClasses();
+						}else {
+						    theIgnorelist.splice(i, i + 1);
+						    updateIgnorelistClasses();
+						}
+						localStorage.setItem('ignorelist', JSON.stringify(theIgnorelist))
+						ignorelist.innerHTML = JSON.stringify(theIgnorelist);
+					}
+
+					var clearIgnorelist = () => {
+						theIgnorelist = [];
+						updateIgnorelistClasses();
+					}
+
+
+
+// S W I T C H E R
+var switcher = (x, ma1, ma2, includeFees, lossCut) => {
+    var ma1 = new MovAvg(ma1);
+    var ma2 = new MovAvg(ma2);
+    var lastBuy = {
+        direction: "",
+        price: null,
+        timestamp: null
+    }
+    var funds = 100;
+    //var counter = 0;
+    window.saleList = [];
+    window.saleListTimestamp = [];
+    window.saleListWithFees = [];
+
+    const myPenisIs = (generalPenisLength, can, change) => {
+    	if(generalPenisLength === "long") {
+            window.saleList.push(change);
+            window.saleListTimestamp.push([change, new Date(can[0])]);
+            console.log(change > 0 ? `win ${change}` : `lose ${change}`);
+            var changeWithFees = change - 0.1;
+            console.log('ªªªªªªªªªªª1 ', change, changeWithFees);
+            var thisIsAVariablenameLolThisPageIsMagnificientlySlapDashOohIWonderIfSlapDashIsAllOneWordOrNotBasedOnMyCapitalisationIClearlyThinkLItIs = includeFees ? changeWithFees : change;
+            funds = changeByXPercent(funds, thisIsAVariablenameLolThisPageIsMagnificientlySlapDashOohIWonderIfSlapDashIsAllOneWordOrNotBasedOnMyCapitalisationIClearlyThinkLItIs);
+            window.saleListWithFees.push(changeWithFees);
+            lastBuy.direction = "short";
+		}else if(generalPenisLength === "short") {
+			// if the price is now lower, the last buy has to have been a short
+            window.saleList.push(change * -1);
+            window.saleListTimestamp.push([change * -1, new Date(can[0])]);
+            console.log(change < 0 ? `win ${change * -1}` : `lose ${change * -1}`);
+            var changeWithFeesAndInverted = (change + 0.1) * -1;
+            var thisIsAVariablenameLolThisPageIsMagnificientlySlapDashOohIWonderIfSlapDashIsAllOneWordOrNotBasedOnMyCapitalisationIClearlyThinkLItIs = includeFees ? changeWithFeesAndInverted : change * -1;
+            console.log('ªªªªªªªªªªª2 ', change, changeWithFeesAndInverted);
+            funds = changeByXPercent(funds, thisIsAVariablenameLolThisPageIsMagnificientlySlapDashOohIWonderIfSlapDashIsAllOneWordOrNotBasedOnMyCapitalisationIClearlyThinkLItIs);
+            window.saleListWithFees.push(changeWithFeesAndInverted);
+            lastBuy.direction = "long";
+		}
+        lastBuy.price = can[4];
+    	lastBuy.timestamp = can[6];
+    }
+
+    x.map(((can) => {
+        var ma1HigherStart = ma1.mostRecentValue() > ma2.mostRecentValue();
+        ma1.addNewPrice(parseFloat(can[4]));
+        ma2.addNewPrice(parseFloat(can[4]));
+        if(!ma2.mostRecentValue()) return;
+        var ma1HigherNow = ma1.mostRecentValue() > ma2.mostRecentValue();
+
+        var change = pc(lastBuy.price, can[4]);
+
+        console.log('• • • • • • • ', lastBuy.direction, change);
+        // actually, I think this real change var could possibly mean the myPenisIs function could avoid a lot of code repetition? not that it matters, this isn't supposed to be too neat
+        var realChange = lastBuy.direction === "short" ? change * -1 : change;
+        if(realChange < lossCut) {
+        	console.log('¡ ¡ ¡ ¡ ¡ ¡ ¡ ¡ ¡ ¡ ¡ ¡', realChange, new Date(can[0]), lastBuy.direction, lastBuy.direction === "short" ? "long" : "short");
+        	myPenisIs(lastBuy.direction === "short" ? "long" : "short", can, change * -1);
+        }
+
+        // I F   C R O S S
+        if(ma1HigherStart != ma1HigherNow) {
+            console.log(`CROSS ${new Date(can[0])}`);
+            if(!lastBuy.price){
+                //first buy, buy but don't react as if MA was crossed
+                myPenisIs("JUST RIGHT BABY ;)", can, change);
+                return;
+            }
+            
+            // logging to indicate the losses are less frequent but heavier
+            if(change > 0){
+            	console.log(`± %c${Array.apply(null, Array(Math.round(change * 100))).map(x => ("+")).join("")}`, 'color: #f00');
+            }else{
+				console.log(`± %c${Array.apply(null, Array(Math.round((change * -1) * 100))).map(x => ("-")).join("")}`, 'color: #0f0');
+            }
+            
+            if(lastBuy.direction === "long") {
+            	myPenisIs("long", can, change);
+            }else {
+            	myPenisIs("short", can, change);
+            }
+            
+            // NOTE: what happens if I move this into one part of the above if/else? thus suposedly mening I only buy or short without the other.
+            console.log('----------', funds, change);
+        }
+    }))
+    // L O G G I N G
+    var gainz = saleList.filter(x => x > 0)
+	gainz.reduce((a, b) => a + b, 0) / gainz.length;
+	var gainzWithFees = saleListWithFees.filter(x => x > 0)
+	console.log('gainz ', gainz.reduce((a, b) => a + b, 0) / gainz.length);
+	console.log('gainzWithFees ', gainzWithFees.reduce((a, b) => a + b, 0) / gainz.length);
+
+	var lozzez = saleList.filter(x => x < 0)
+	lozzez.reduce((a, b) => a + b, 0) / lozzez.length;
+	var lozzezWithFees = saleListWithFees.filter(x => x < 0)
+	console.log('lozzez ', lozzez.reduce((a, b) => a + b, 0) / lozzez.length);
+	console.log('lozzezWithFees ', lozzezWithFees.reduce((a, b) => a + b, 0) / lozzez.length);
+
+	// get bog, don't fucking log it
+	console.log('20 shittest losses', saleListTimestamp.sort((a,b) => a[0] - b[0]).slice(0,20));
+
+    return funds;
+}
+
+const runSwitcher = (url, ma1, ma2, includeFees, lossCut) => {
+	fetch(url).then((data) => data.json()).then((json) => {
+		Sresults.innerText = switcher(json, ma1, ma2, includeFees, lossCut);
+	}).catch(e => console.log(e.message))
+}
+
+// P R E V   C A N D L E 
+// make it so it's previous 2?
+// make it so it you only do it once until the candle colour changes again
+// is it there a candle interval/market where it's consistently poor? invert it then!
+/*
+var pc = (a, b) => {
+	    if (a === b) return 0; // avoid any floating point crazyness
+	    return (100 - (b / (a / 100))) * -1;
+	}
+var funds = 100;
+x.map((can, index) => {
+    if(index === 0) return;
+    var prev = parseFloat(x[index - 1][1]) > parseFloat(x[index - 1][4]) ? "r" : "g";
+    var change = pc(can[1], can[4]);
+    if(prev === "r") {
+        change = change * -1;
+    }
+    //change = change - 0.1; // FEES >:-0 - hang on, shouldn't this be 0.2? buying AND selling.
+    funds = funds * (1 + (change / 100));
+    console.log(funds, change);
+    //console.log(`${Array.apply(null, Array(Math.round(funds))).map(x => ("+")).join("")}`);
+    return change
+})
+
+–––––––––––––––––––––––––––––––––––
+
+var pc = (a, b) => {
+	    if (a === b) return 0; // avoid any floating point crazyness
+	    return (100 - (b / (a / 100))) * -1;
+	}
+var funds = 100;
+x.map((can, index) => {
+    if(index < 5) return;
+    var prevPrevPrev = parseFloat(x[index - 3][1]) > parseFloat(x[index - 3][4]) ? "r" : "g";
+    var prevPrev = parseFloat(x[index - 2][1]) > parseFloat(x[index - 2][4]) ? "r" : "g";
+    var prev = parseFloat(x[index - 1][1]) > parseFloat(x[index - 1][4]) ? "r" : "g";
+    var current = parseFloat(can[1]) > parseFloat(can[4]) ? "r" : "g";
+    var change = pc(can[1], can[4]);
+    if(prev !== current && prevPrev !== prev & prevPrevPrev !== prevPrev) return;
+    if(prev === "r") {
+        change = change * -1;
+    }
+    //change = change - 0.2; // FEES >:-0
+    funds = funds * (1 + (change / 100));
+    console.log(funds, change);
+    //console.log(`${Array.apply(null, Array(Math.round(funds))).map(x => ("+")).join("")}`);
+    return change
+})
+
+// IN GENERAL IS THE SOLOUTION TO THE FEES ISSUE TO MAKE IT SO EACH TRADE IS A BIGGER AMOUNT? I.E A 0.5% GAIN IS NICE, BUT FEES OF 0.2% (BUYING AND SELLING COMBINED) ARE 40% OF THE GAIN. WHEREAS with a gain of 10% and fees of 0.2%, the fees are 2% of the GAINZ.
+// Maybe don't buy or sell til 10% eitherway.
+*/
+
+</script>
+<h1>Analysis tools</h1>
+<h3>(lol anal)</h3>
+<h2>Moving Averate Bot</h2>
+<input id="inputURL" value="https://api.binance.com/api/v3/klines?symbol=STMXBUSD&interval=1h&limit=1000" style="width: 620px;" />
+<button onclick="getCandles(inputURL.value)">GET and run</button>
+<hr />
+<input id="inputA" type="number" value="3" />
+<input id="inputB" type="number" value="30" />
+<input id="inputC" type="number" value="100" />
+<button onclick="runSim(parseInt(inputA.value), parseInt(inputB.value), parseInt(inputC.value))">run</button>
+<hr />
+<p id="winLoseIndicator">-</p>
+<p id="fundsIndicator">$69</p>
+<pre id="transactionIndicator"></pre>
+<hr />
+<h2>Switcher</h2>
+<p>On coins that have UP and DOWN versions (allowing for easy and available shorting) what happens if you short after every positive MA crossover and go long after every negative?</p>
+<p>
+<input id="Sfees" type="checkbox" /><span>&nbsp;Include fees (I've included this to show how heartbreakingly fees make a huge difference - especially when trading on 5m scale, looking at the numbers, the losses seem less regular but heavier)</span>
+<p/>
+<p>
+<input id="SlossCut" type="number" value="-99999999999" /> <span>sell at a certain level of loss, since this is only realy relative to the market behavior at any given time, it's basically useless</span>
+</p>
+<input id="SinputURL" value="https://api.binance.com/api/v3/klines?symbol=ETHUPUSDT&interval=1h&limit=1000" style="width: 620px;" />
+<input id="SinputA" type="number" value="1" />
+<input id="SinputB" type="number" value="4" />
+<button onclick="runSwitcher(SinputURL.value, parseInt(SinputA.value), parseInt(SinputB.value), Sfees.checked, parseInt(SlossCut.value))">GET and run</button>
+<hr />
+<p id="Sresults">-</p>
+<br />
+<strong>To-do</strong>
+<ul>
+	<li>Make the loss cut functionality work properly</li>
+	<li>Add an intervention functionality in, like loss cutter, but it actually exits the current trade and goes with momentum, to counteract big spikes in theory. NOTE: surely this needs to be relative to recent candle behavior?</li>
+	<li>The cross probably shouldn't be decided by wether the candle started on the other side of the MA, there are times when candles jump, instead I should use the index of x.map()</li>
+	<li>Add a multiplier if you've tried to reverse a big loss.</li>
+	<li>Don't include compount interest. I did this, it was very negative. is there a way to leverage positives.</li>
+	<li>Allow a halt on betting after a big loss (to after a big spike there's usually a big fall)</li>
+	<li>Draw all of this out onto a chart, it could be enlightening.</li>
+	<li>Could it be a strategy but itself to wait for these massive losses due to spikes and betting on it falling afterwards? Or at least a huge compliment to this strategy.</li>
+	<li>Are the fees really having that much of an impact? It seems so disproportionate for 0.1%</li>
+	<li>Combine with graded selling? (Selling off 10% of the original buy for every 1% decline)</li>
+	<li>Is there a flat-fee exchange? It would literally be the difference between these strategies completely working or not. Or even lower fees: https://www.bestbitcoinexchange.net/lowest-fees/</li>
+	<li>^ Also using BUSD will have a fee of 0.075% I beleve</li>
+</ul>
+<hr />
+<h2>Top Movers</h2>
+<pre id="watchlist"></pre> <button onclick="clearWatchlist()">clear watchlist</button>
+<pre id="ignorelist"></pre> <button onclick="clearIgnorelist()">clear ignorelist</button>
+<br />
+<input id="topMoverTimeframe" type="number" value="4" />
+<label>candle count</label>
+<br />
+<input id="candleIntervalInput" type="input" value="1m" />
+<label>candle interval (e.g. 1m, 1h, 4h, 1d etc...)</label>
+<br />
+<button onclick="getTopMovers(parseInt(topMoverTimeframe.value), candleIntervalInput.value)">get dem hoes</button>
+<ol id="topMovers"></ol>
+</body>
+<!--
+WIP
+[...document.querySelectorAll('.title-2wKPZc2G')].map((x) => {
+    if( x.innerText === 'Account Balance' ) {
+        const priceString = x.previousSibling.innerText;
+        const parsedFloat = parseFloat(priceString.replace(' ', ''))
+        console.log(priceString)
+    }
+});
+-->
+
+</html>
