@@ -349,7 +349,7 @@ var danumba = pc(parseFloat(a[0][1]), parseFloat(a[0][4])); // the first step wi
 			    var resultsSorted = withCreatePercentGainToPercentTraveledScore.sort((a, b) => (a.percentChange * -1) - (b.percentChange * -1));
 				var futuresLabel = (s) => window.usdtListFutures.findIndex(f => f.symbol === s) > -1 ? "is-on-futures-list" : "";
 
-			    topMovers.innerHTML = resultsSorted.map(x => `<li id="${x.pair.symbol}" class="${futuresLabel(x.pair.symbol)}"><span onclick="toggleWatchlist('${x.pair.symbol}')">${x.pair.symbol}: ${x.percentChange}&nbsp;(weighted gain: ${x.weightedGainScore})&nbsp;(${x.fluctuationScore}) [percent traveled (the lower the number the more direct the gain or loss)${x.percentGainToPercentTraveledScore}]</span><button onclick="toggleIgnorelist('${x.pair.symbol}')">ignore</button></li>`).join('');
+			    topMovers.innerHTML = resultsSorted.map(x => `<li id="${x.pair.symbol}" class="${futuresLabel(x.pair.symbol)}"><span onclick="toggleWatchlist('${x.pair.symbol}')">${x.pair.symbol}: ${x.percentChange}&nbsp;(weighted gain: ${x.weightedGainScore})&nbsp;(${x.fluctuationScore}) [percent traveled (the lower the number the more direct the gain or loss)${x.percentGainToPercentTraveledScore}]</span><button onclick="toggleIgnorelist('${x.pair.symbol}')">ignore</button> ${x.pair.symbol.isMarginTradingAllowed ? "M" : ""} </li>`).join('');
 			    updateWatchlistClasses();
 			    updateIgnorelistClasses();
 			});
