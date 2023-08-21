@@ -654,10 +654,10 @@ x.map((can, index) => {
 <pre id="watchlist"></pre> <button onclick="clearWatchlist()">clear watchlist</button>
 <pre id="ignorelist"></pre> <button onclick="clearIgnorelist()">clear ignorelist</button>
 <br />
-<input id="topMoverTimeframe" type="number" value="4" />
+<input id="topMoverTimeframe" type="number" value="2" />
 <label>candle count</label>
 <br />
-<input id="candleIntervalInput" type="input" value="1m" />
+<input id="candleIntervalInput" type="input" value="15m" />
 <label>candle interval (e.g. 1m, 1h, 4h, 1d etc...)</label>
 <br />
 <button onclick="getTopMovers(parseInt(topMoverTimeframe.value), candleIntervalInput.value)">get dem hoes</button>
