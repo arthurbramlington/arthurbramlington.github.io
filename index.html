@@ -69,6 +69,35 @@
 		    font-weight: 900;
 		    font-family: sans-serif;
 		}
+
+	.led-red {
+		width: 10px;
+		height: 40px;
+		background: red;
+		border-radius: 15px;
+		box-shadow: 0 0 28px 9px red;
+		float: left;
+		margin-left: 5px;
+	}
+	.led-amber {
+		width: 10px;
+		height: 40px;
+		background: orange;
+		border-radius: 15px;
+		box-shadow: 0 0 28px 9px orange;
+		float: left;
+		margin-left: 5px;
+	}
+	.led-green {
+		width: 10px;
+		height: 40px;
+		background: green;
+		border-radius: 15px;
+		box-shadow: 0 0 28px 9px green;
+		float: left;
+		margin-left: 5px;
+	}
+		
     </style>
 <script>
 
@@ -605,6 +634,11 @@ x.map((can, index) => {
 
 </script>
 <h1>Analysis tools</h1>
+<div style="display: inline-block;">
+	<div class="led-green"></div><div class="led-green"></div><div class="led-green"></div><div class="led-amber"></div><div class="led-amber"></div><div class="led-amber"></div><div class="led-red"></div><div class="led-red"></div><div class="led-red">
+</div>
+
+</div>
 <h3>(lol anal)</h3>
 <h2>Moving Averate Bot</h2>
 <input id="inputURL" value="https://api.binance.com/api/v3/klines?symbol=STMXBUSD&interval=1h&limit=1000" style="width: 620px;" />
