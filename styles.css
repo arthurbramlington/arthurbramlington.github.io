@@ -1,6 +1,6 @@
 @font-face {
 		  font-family: digitalfont;
-		  src: url(digital-7-mono.ttf);
+		  src: url("digital-7-mono.ttf");
 		}
 	    ol li:nth-child(-n+8) {
 	        color: darkcyan;
