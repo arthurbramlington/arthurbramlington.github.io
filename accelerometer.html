@@ -1,0 +1,139 @@
+<html>
+<body style="padding: 100px;">
+	<head>
+		<link rel="stylesheet" href="styles.css">
+	</head>
+<script>
+
+	// U T I L  F U N C S
+	var pc = (a, b) => {
+	    if (a === b) return 0; // avoid any floating point crazyness
+	    return (100 - (b / (a / 100))) * -1;
+	}
+	var changeByXPercent = (targ, perc) => (((perc / 100) + 1) * targ);
+	var avcan = (array, includeCurrentCandle = false, onlyUpperRange = false) => {
+	    const lowIndex = onlyUpperRange ? 1 : 3;
+	    const ranges = array.map(c => {
+	        return pc(parseFloat(c[lowIndex]), parseFloat(c[2]))
+	    });
+	    const rangesNew = includeCurrentCandle ? ranges : ranges.slice(0, ranges.length - 1);
+	    return rangesNew.reduce((a, b) => a + b, 0) / ranges.length
+	}
+
+	class MovAvg {
+	    constructor(interval) {
+	        this.interval = interval;
+	        this.priceHistory = [];
+	        this.valueHistory = [];
+	    }
+
+	    addNewPrice(price) {
+	        this.priceHistory.push(price);
+	        if (this.priceHistory.length < this.interval) return;
+	        const slicedRange = this.priceHistory.slice(this.priceHistory.length - this.interval, this.priceHistory.length);
+	        const currentAvg = slicedRange.reduce((a, cv) => a + cv) / slicedRange.length
+	        this.valueHistory.push(currentAvg);
+	    }
+
+	    mostRecentValue(num = 1) {
+	        if (num > this.valueHistory.length) {
+	            return this.valueHistory;
+	        }
+	        const lastIndex = this.valueHistory.length;
+	        return this.valueHistory.slice(lastIndex - num, lastIndex);
+	    }
+
+	    mostRecentChange() {
+	        if (this.valueHistory < 2) return 0;
+	        const r = this.mostRecentValue(2);
+	        return pc(r[0], r[1]);
+	    }
+	}
+	/* U T I L   F U N C S   E N D */
+
+	const getCandleComparison = (candles, includeWick = false) => {
+	    const range = includeWick ? {a: 2, b: 3}: {a: 1, b: 4};
+	    const currentCandle = candles.slice(-1)[0];
+	    const remainingCandles = candles.slice(0, candles.length - 1);
+	    const currentCandleChange = Math.abs(parseFloat(currentCandle[range.a]) - parseFloat(currentCandle[range.b]));
+	    const totalChange = remainingCandles.reduce((accumulator, candle) => accumulator + Math.abs(parseFloat(candle[range.a]) - parseFloat(candle[range.b])), 0)
+	    const recentCandlesAverage = totalChange / remainingCandles.length;
+	    return currentCandleChange / recentCandlesAverage;
+	}
+
+	var getTopMovers = () => {
+		const minutes = parseInt(timeframeSelector.value);
+		const candleInterval = candleIntervalSelector.value;
+		fetch('https://api.binance.com/api/v3/exchangeInfo').then(data => data.json()).then((i) => {
+			var usdtList = i.symbols.filter((p) => p.quoteAsset === "USDT" && p.status === "TRADING")
+			Promise.all(usdtList.map((p) => {
+				return fetch(`https://api.binance.com/api/v3/klines?symbol=${p.symbol}&interval=${candleInterval}&limit=${minutes}`).then(data => data.json()).then(candles => ({pair: p, candles})).catch(e => e.message)
+			})).then((values) => {
+				const withMultiplierValue = values.map(item => {
+					return {
+						...item,
+						recentAverageMultiplier: getCandleComparison(item.candles)
+					}
+				});
+				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b.recentAverageMultiplier - a.recentAverageMultiplier);
+				console.log("V A L U E S :  ", values, "W I T H   M U L T I P L I E R :  ", withMultiplierValue);
+			    topMovers.innerHTML = withMultiplierValueSorted.map(n => `
+			    	<li id="${n.pair.symbol}">
+			    		<span class="symbol">
+			    			${n.pair.symbol}
+			    		</span>
+			    		<span class="multiplier">
+			    			${(n.recentAverageMultiplier).toString().substring(0, 4)}
+			    		</span>
+						<div class="TURBO-indicator">
+							${[...Array(Math.ceil(n.recentAverageMultiplier))].map(() => "<span class='bead-light'></span>").join('')}
+						</div>
+			    	</li>
+			    `).join('');
+			});
+		}).catch(e => console.log(e.message));
+	}
+</script>
+<nav>
+	<a href="index.html">H O M E</a>
+</nav>
+<h1>Accelerometer</h1>
+
+<hr />
+<strong>To-do</strong>
+<ul>
+	<li>select number of recent candles for the average</li>
+	<li>which candle time frame to use</li>
+	<li>include wick or not - actually, give both by default</li>
+	<li>give a simple reading of how many times the recent average this candle is.</li>
+	<li>volume data? I'm not convinced how relevant this is at this point</li>
+	<li>audio alerts with interval selector</li>
+	<li>some form of analysis of a longer range of candles MA performance</li>
+	<li>V V V V  O P T I O N A L  V V V V</li>
+	<li>Inculde most recent candle percent</li>
+	<li>Option to compare current open/close with recent candle's full range</li>
+</ul>
+<hr />
+
+<h2>Top accelerators</h2>
+<input id="timeframeSelector" type="number" value="20" />
+<label>candle count</label>
+<br />
+<input id="candleIntervalSelector" type="input" value="15m" />
+<label>candle interval (e.g. 1m, 1h, 4h, 1d etc...)</label>
+<br />
+<button onclick="getTopMovers()">Launch</button>
+<ol id="topMovers" class="top-accelerators-list"></ol>
+</body>
+<!--
+WIP
+[...document.querySelectorAll('.title-2wKPZc2G')].map((x) => {
+    if( x.innerText === 'Account Balance' ) {
+        const priceString = x.previousSibling.innerText;
+        const parsedFloat = parseFloat(priceString.replace(' ', ''))
+        console.log(priceString)
+    }
+});
+-->
+
+</html>
