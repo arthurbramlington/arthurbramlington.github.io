@@ -1,0 +1,117 @@
+@font-face {
+		  font-family: digitalfont;
+		  src: url(digital-7-mono.ttf);
+		}
+		ol li {
+			position: relative;
+			font-family: helvetica;
+		}
+	    ol li:nth-child(-n+8) {
+	        color: darkcyan;
+	    }
+	    ol li.isOnWatchlist {
+	    	outline: 1px dashed orange;
+	    }
+	    ol li.isOnIgnorelist {
+	    	opacity: 0.5;
+	    }
+	    button {
+	    	background: none;
+		    border: 1px solid #ddd;
+		    border-radius: 5px;
+		    color: white;
+	    }
+	    body {
+    	    padding: 100px;
+		    font-weight: 100;
+		    /*font-family: avenir;*/
+	        /*background: black;
+    		color: #690000;*/
+    		background: #00202a;
+    		/*color: #692300;*/
+    		color: #852c00;
+		    /*font-family: "Perfect DOS VGA 437";*/
+		    font-family: digitalfont;
+	    }
+	    h1 {
+	    	font-size: 4rem;
+	    	text-shadow: 0 0 7px red;
+			color: red;
+		    /*font-family: "Perfect DOS VGA 437";*/
+		    font-family: digitalfont;
+	    }
+	    h1, h2 {
+		    text-transform: uppercase;
+			letter-spacing: .75rem;
+	    }
+	    h1:before {
+	    	content: "\\\\\\\\ ";
+	    }
+	    h1:after {
+	    	content: " ////";
+	    }
+	    input {
+	    	font-family: 'digitalfont';
+		    background: rgba(0,0,0,0.4);
+		    padding: 0.3rem;
+		    border: 0.5rem solid rgba(0,0,0,0.25);
+		    color: red;
+		    font-size: 2rem;
+		    border-radius: 1rem;
+		    text-align: center;
+	        text-shadow: 0 0 7px red;
+    		color: red;
+	    }
+		.is-on-futures-list:before {
+			content: "FUTURES";
+			position: absolute;
+			font-size: 7px;
+			left: -84px;
+			width: 50px;
+			top: 6px;
+			color: yellow;
+			font-weight: 900;
+			font-family: sans-serif;
+		}
+		.margin-trading-allowed:after {
+			Content: "M";
+		    position: absolute;
+		    font-size: 7px;
+		    left: -45px;
+		    width: 50px;
+		    top: 6px;
+		    color: #ff00fd;
+		    font-weight: 900;
+		    font-family: sans-serif;
+		}
+
+	.led-red {
+		width: 10px;
+		height: 40px;
+		background: red;
+		border-radius: 15px;
+		/*box-shadow: 0 0 2px 2px red, 0 0 28px 9px red;*/
+		box-shadow: 0 0 2px 1px red, 0 0 25px 3px red;
+		float: left;
+		margin-left: 10px;
+	}
+	.led-amber {
+		width: 10px;
+		height: 40px;
+		background: orange;
+		border-radius: 15px;
+		/*box-shadow: 0 0 2px 2px orange, 0 0 28px 9px orange;*/
+		box-shadow: 0 0 2px 1px orange, 0 0 25px 3px orange;
+		float: left;
+		margin-left: 10px;
+	}
+	.led-green {
+		width: 10px;
+		height: 40px;
+		background: green;
+		border-radius: 15px;
+		/*box-shadow: 0 0 2px 2px green, 0 0 28px 9px green;*/
+		box-shadow: 0 0 2px 1px green, 0 0 25px 3px green;
+		float: left;
+		margin-left: 10px;
+	}
