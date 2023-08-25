@@ -82,6 +82,11 @@
 	    	font-size: 0.75rem;
     		color: #005979;
 	    }
+		hr {
+			width: 50%;
+			border: 1px solid rgba(255,255,255,0.1);
+			margin-left:0;
+		}
 		.is-on-futures-list:before {
 			content: "FUTURES";
 			position: absolute;
