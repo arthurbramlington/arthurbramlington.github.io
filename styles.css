@@ -78,6 +78,10 @@
 	        text-shadow: 0 0 7px red;
     		color: red;
 	    }
+	    nav a {
+	    	font-size: 0.75rem;
+    		color: #005979;
+	    }
 		.is-on-futures-list:before {
 			content: "FUTURES";
 			position: absolute;
