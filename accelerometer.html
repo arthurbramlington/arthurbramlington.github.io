@@ -58,7 +58,7 @@
 	    const currentCandleChange = Math.abs(parseFloat(currentCandle[range.a]) - parseFloat(currentCandle[range.b]));
 	    const totalChange = remainingCandles.reduce((accumulator, candle) => accumulator + Math.abs(parseFloat(candle[range.a]) - parseFloat(candle[range.b])), 0)
 	    const recentCandlesAverage = totalChange / remainingCandles.length;
-	    return !currentCandleChange & !recentCandlesAverage ? 0 : currentCandleChange / recentCandlesAverage;
+	    return !currentCandleChange || !recentCandlesAverage ? 0 : currentCandleChange / recentCandlesAverage;
 	}
 
 	var getTopMovers = () => {
@@ -76,7 +76,7 @@
 					}
 				});
 				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b.recentAverageMultiplier - a.recentAverageMultiplier);
-				console.log("V A L U E S :  ", values, "W I T H   M U L T I P L I E R :  ", withMultiplierValue);
+				console.log("V A L U E S :  ", values, "W I T H   M U L T I P L I E R :  ", withMultiplierValueSorted);
 			    topMovers.innerHTML = withMultiplierValueSorted.map(n => `
 			    	<li id="${n.pair.symbol}">
 			    		<span class="symbol">
