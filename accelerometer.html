@@ -58,7 +58,9 @@
 	    const currentCandleChange = Math.abs(parseFloat(currentCandle[range.a]) - parseFloat(currentCandle[range.b]));
 	    const totalChange = remainingCandles.reduce((accumulator, candle) => accumulator + Math.abs(parseFloat(candle[range.a]) - parseFloat(candle[range.b])), 0)
 	    const recentCandlesAverage = totalChange / remainingCandles.length;
-	    return !currentCandleChange || !recentCandlesAverage ? 0 : currentCandleChange / recentCandlesAverage;
+	    const recentCandlesAverageAsPercent = pc(parseFloat(currentCandle[1]), parseFloat(currentCandle[1]) + recentCandlesAverage); // NOTE: using currentCandle[1] as an approx current price, this is lazy, change it at some point. This whole function could be using percent rather than the price difference if that's easier.
+	    const currentCandleMultiplier = !currentCandleChange || !recentCandlesAverage ? 0 : currentCandleChange / recentCandlesAverage;
+	    return {recentCandlesAverageAsPercent, currentCandleMultiplier};
 	}
 
 	var getTopMovers = () => {
@@ -72,10 +74,10 @@
 				const withMultiplierValue = values.map(item => {
 					return {
 						...item,
-						recentAverageMultiplier: getCandleComparison(item.candles)
+						...getCandleComparison(item.candles)
 					}
 				});
-				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b.recentAverageMultiplier - a.recentAverageMultiplier);
+				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b.currentCandleMultiplier - a.currentCandleMultiplier);
 				console.log("V A L U E S :  ", values, "W I T H   M U L T I P L I E R :  ", withMultiplierValueSorted);
 			    topMovers.innerHTML = withMultiplierValueSorted.map(n => `
 			    	<li id="${n.pair.symbol}">
@@ -83,10 +85,13 @@
 			    			${n.pair.symbol}
 			    		</span>
 			    		<span class="multiplier">
-			    			${(n.recentAverageMultiplier).toString().substring(0, 4)}
+			    			${(n.currentCandleMultiplier).toString().substring(0, 4)}
+			    		</span>
+			    		<span class="recent-percentages">
+			    			${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small>
 			    		</span>
 						<div class="TURBO-indicator">
-							${[...Array(Math.ceil(n.recentAverageMultiplier))].map(() => "<span class='bead-light'></span>").join('')}
+							${[...Array(Math.ceil(n.currentCandleMultiplier))].map(() => "<span class='bead-light'></span>").join('')}
 						</div>
 			    	</li>
 			    `).join('');
@@ -126,15 +131,5 @@
 <button onclick="getTopMovers()">Launch</button>
 <ol id="topMovers" class="top-accelerators-list"></ol>
 </body>
-<!--
-WIP
-[...document.querySelectorAll('.title-2wKPZc2G')].map((x) => {
-    if( x.innerText === 'Account Balance' ) {
-        const priceString = x.previousSibling.innerText;
-        const parsedFloat = parseFloat(priceString.replace(' ', ''))
-        console.log(priceString)
-    }
-});
--->
 
 </html>
