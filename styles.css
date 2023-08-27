@@ -110,6 +110,27 @@
 		    font-family: sans-serif;
 		}
 
+		#popup {
+		    position: absolute;
+		    background: white;
+		    top: 10%;
+		    left: 5%;
+		    width: 85%;
+		    background: black;
+		    border-radius: 15px;
+		    box-shadow: 0 0 2px 1px #aeaeff, 0 0 85px 23px #aeaeff;
+		}
+		#popup.hide {
+			display: none;
+		}
+		#popupClose {
+		    margin: 1rem auto;
+			width: 100px;
+			text-align: center;
+			font-size: 3rem;
+			cursor: pointer;
+		}
+
 	.led-MEGADANK {
 		width: 10px;
 		height: 40px;
