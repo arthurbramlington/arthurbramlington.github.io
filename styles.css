@@ -194,24 +194,24 @@
 		margin-left: 10px;
 	}
 
-	.TURBO-indicator span {
-		background: white;
-		box-shadow: 0 0 2px 1px #aeaeff, 0 0 25px 3px #aeaeff;
+	.TURBO-indicator span.override.red, .TURBO-indicator span:nth-child(5), .TURBO-indicator span:nth-child(6) {
+		background: red;
+		box-shadow: 0 0 2px 1px red, 0 0 25px 3px red;
 	}
 
-	.TURBO-indicator span:nth-child(1), .TURBO-indicator span:nth-child(2){
-		background: green;
-		box-shadow: 0 0 2px 1px green, 0 0 25px 3px green;	
-	}
-
-	.TURBO-indicator span:nth-child(3), .TURBO-indicator span:nth-child(4) {
+	.TURBO-indicator span.override.amber, .TURBO-indicator span:nth-child(3), .TURBO-indicator span:nth-child(4) {
 		background: orange;
 		box-shadow: 0 0 2px 1px orange, 0 0 25px 3px orange;
 	}
 
-	.TURBO-indicator span:nth-child(5), .TURBO-indicator span:nth-child(6) {
-		background: red;
-		box-shadow: 0 0 2px 1px red, 0 0 25px 3px red;
+	.TURBO-indicator span.override.green, .TURBO-indicator span:nth-child(1), .TURBO-indicator span:nth-child(2){
+		background: green;
+		box-shadow: 0 0 2px 1px green, 0 0 25px 3px green;	
+	}
+
+	.TURBO-indicator span.override.white-hot, .TURBO-indicator span {
+		background: white;
+		box-shadow: 0 0 2px 1px #aeaeff, 0 0 25px 3px #aeaeff;
 	}
 
 	/* A C C E L E R O M E T E R   P A G E */
