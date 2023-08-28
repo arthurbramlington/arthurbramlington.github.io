@@ -179,11 +179,13 @@
 		clearInterval(window.alert);
 		const getAndCheck = async () => {
 			await getTopMovers();
-			if(window.currentResults[0].recentCandlesAverageAsPercent >= alertPercent.value 
-				&& window.currentResults[0].currentCandleMultiplier >= alertCandleMultiplier.value) {
-				beep();
-				console.log("ALERT: ", window.currentResults[0]);
-			}
+			window.currentResults.slice(0, 10).map((result) => {
+				if(result.recentCandlesAverageAsPercent >= alertPercent.value 
+					&& result.currentCandleMultiplier >= alertCandleMultiplier.value) {
+					beep();
+					console.log("ALERT: ", window.currentResults[0]);
+				}
+			});
 		}
 		getAndCheck(); // run one initially
 		window.alert = setInterval(getAndCheck, parseInt(alertInterval.value * 1000))
