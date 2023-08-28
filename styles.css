@@ -195,13 +195,13 @@
 	}
 
 	.TURBO-indicator span.override.red, .TURBO-indicator span:nth-child(1), .TURBO-indicator span:nth-child(2) {
-		background: #CC5500;
-		box-shadow: 0 0 2px 1px #CC5500, 0 0 25px 3px #CC5500;
+		background: #bd1400;
+		box-shadow: 0 0 2px 1px #bd1400, 0 0 25px 3px #bd1400;
 	}
 
 	.TURBO-indicator span.override.amber, .TURBO-indicator span:nth-child(3), .TURBO-indicator span:nth-child(4) {
-		background: gold;
-		box-shadow: 0 0 2px 1px gold, 0 0 25px 3px gold;
+		background: orange;
+		box-shadow: 0 0 2px 1px orange, 0 0 25px 3px orange;
 	}
 
 	.TURBO-indicator span.override.green, .TURBO-indicator span:nth-child(5), .TURBO-indicator span:nth-child(6){
