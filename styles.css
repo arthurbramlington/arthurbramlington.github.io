@@ -120,7 +120,7 @@
 		    border-radius: 15px;
 		    box-shadow: 0 0 2px 1px #aeaeff, 0 0 85px 23px #aeaeff;
 		}
-		#popup.hide {
+		.hide {
 			display: none;
 		}
 		#popupClose {
