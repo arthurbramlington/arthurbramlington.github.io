@@ -90,11 +90,11 @@
 	const candleSizeColourDecider = (sizePercent) => {
 		// this is very crude but fuck it. Currently these are modeled on the 15m candles, but they should of course vary. Also just randomly chosen hahahahah
 		if(sizePercent < 0.3) {
-			return " override green";
+			return " override red";
 		} else if (sizePercent < 0.8) {
 			return " override amber";
 		} else if (sizePercent < 1.3) {
-			return " override red";
+			return " override green";
 		} else {
 			return " override white-hot";
 		}
