@@ -186,7 +186,7 @@
 			}
 		}
 		getAndCheck(); // run one initially
-		window.alert = setInterval(getAndCheck(), parseInt(alertInterval.value * 1000))
+		window.alert = setInterval(getAndCheck, parseInt(alertInterval.value * 1000))
 	}
 </script>
 <div id="popup" class="hide">
