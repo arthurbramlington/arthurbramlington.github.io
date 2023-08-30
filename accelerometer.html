@@ -67,7 +67,14 @@
 	    const recentCandlesAverage = totalChange / remainingCandles.length;
 	    const recentCandlesAverageAsPercent = pc(parseFloat(currentCandle[1]), parseFloat(currentCandle[1]) + recentCandlesAverage); // NOTE: using currentCandle[1] as an approx current price, this is lazy, change it at some point. This whole function could be using percent rather than the price difference if that's easier.
 	    const currentCandleMultiplier = !currentCandleChange || !recentCandlesAverage ? 0 : currentCandleChange / recentCandlesAverage;
-	    return {recentCandlesAverageAsPercent, currentCandleMultiplier};
+	    
+	    // volume percent change
+	    const currentVolume = currentCandle[5];
+	    console.log();
+	    const recentVolumeAverage = remainingCandles.reduce((accumulator, candle) => (accumulator + parseFloat(candle[5])), 0) / remainingCandles.length;
+	    const recentVolumeMultiplier = currentVolume / recentVolumeAverage;
+
+	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, recentVolumeMultiplier};
 	}
 
 	const historicLog = (analPeriod, symbol, candleCount) => {
