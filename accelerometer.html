@@ -183,7 +183,7 @@
 				if(result.recentCandlesAverageAsPercent >= alertPercent.value 
 					&& result.currentCandleMultiplier >= alertCandleMultiplier.value) {
 					beep();
-					console.log("ALERT: ", window.currentResults[0]);
+					console.log("ALERT: ", result);
 				}
 			});
 		}
