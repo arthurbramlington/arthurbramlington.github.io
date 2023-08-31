@@ -191,7 +191,7 @@
 		clearInterval(window.alert);
 		const getAndCheck = async () => {
 			await getTopMovers();
-			window.currentResults.slice(0, 10).map((result) => {
+			window.currentResults.slice(0, 40).map((result) => {
 				if(result.recentCandlesAverageAsPercent >= alertPercent.value 
 					&& result.currentCandleMultiplier >= alertCandleMultiplier.value) {
 					beep();
