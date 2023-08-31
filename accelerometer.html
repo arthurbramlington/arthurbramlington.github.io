@@ -66,6 +66,11 @@
 	    const totalChange = remainingCandles.reduce((accumulator, candle) => accumulator + Math.abs(parseFloat(candle[range.a]) - parseFloat(candle[range.b])), 0)
 	    const recentCandlesAverage = totalChange / remainingCandles.length;
 	    const recentCandlesAverageAsPercent = pc(parseFloat(currentCandle[1]), parseFloat(currentCandle[1]) + recentCandlesAverage); // NOTE: using currentCandle[1] as an approx current price, this is lazy, change it at some point. This whole function could be using percent rather than the price difference if that's easier.
+
+		// standard deviation
+	    const standardDeviation = Math.sqrt(remainingCandles.reduce((accumulator, candle) => accumulator + Math.pow((Math.abs(parseFloat(candle[range.a]) - parseFloat(candle[range.b]))) - recentCandlesAverage, 2), 0) / remainingCandles.length);
+	    const uncleLiamsKrazyKandleStandardDeviationScore = standardDeviation / recentCandlesAverage; // e.g. 0 is no deviation, 3 is a deviation of 3x the average
+
 	    const currentCandleMultiplier = !currentCandleChange || !recentCandlesAverage ? 0 : currentCandleChange / recentCandlesAverage;
 	    
 	    // volume percent change
@@ -74,7 +79,7 @@
 	    const recentVolumeAverage = remainingCandles.reduce((accumulator, candle) => (accumulator + parseFloat(candle[5])), 0) / remainingCandles.length;
 	    const recentVolumeMultiplier = currentVolume / recentVolumeAverage;
 
-	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, recentVolumeMultiplier};
+	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, recentVolumeMultiplier, uncleLiamsKrazyKandleStandardDeviationScore};
 	}
 
 	const historicLog = (analPeriod, symbol, candleCount) => {
@@ -128,7 +133,7 @@
 						<span class='bead-light ${candleSizeColourDecider(n.recentCandlesAverageAsPercent)}'></span>
 					</div>
 		            <span class="recent-percentages">
-		                ${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small>
+		                ${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small> ${n.uncleLiamsKrazyKandleStandardDeviationScore.toString().substring(0, 3)} <small>(SD)</small>
 		            </span>
 		            <span class="multiplier">
 		                ${(n.currentCandleMultiplier).toString().substring(0, 4)}
@@ -167,7 +172,7 @@
 							<span class='bead-light ${candleSizeColourDecider(n.recentCandlesAverageAsPercent)}'></span>
 						</div>
 			    		<span class="recent-percentages">
-			    			${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small>
+			    			${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small> ${n.uncleLiamsKrazyKandleStandardDeviationScore.toString().substring(0, 3)} <small>(SD)</small>
 			    		</span>
 			    		<span class="multiplier">
 			    			${(n.currentCandleMultiplier).toString().substring(0, 4)}
