@@ -77,9 +77,9 @@
 	    const currentVolume = currentCandle[5];
 	    console.log();
 	    const recentVolumeAverage = remainingCandles.reduce((accumulator, candle) => (accumulator + parseFloat(candle[5])), 0) / remainingCandles.length;
-	    const recentVolumeMultiplier = currentVolume / recentVolumeAverage;
+	    const currentVolumeMultiplier = currentVolume / recentVolumeAverage;
 
-	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, recentVolumeMultiplier, uncleLiamsKrazyKandleStandardDeviationScore};
+	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, currentVolumeMultiplier, uncleLiamsKrazyKandleStandardDeviationScore};
 	}
 
 	const historicLog = (analPeriod, symbol, candleCount) => {
@@ -120,7 +120,7 @@
 	const getAndShowHistoricLog = async (analPeriod, symbol, candleCount) => {
 		popupToggle();
 		const theHistoricLog = await historicLog(analPeriod, symbol, candleCount);
-		console.log(theHistoricLog.map(n => (`${new Date(n.datestampOpen)} - ${n.currentCandleMultiplier}`)));
+		console.log(theHistoricLog.map(n => (`${new Date(n.datestampOpen)} - ${n[window.candleOrVolumeMultiplier]}`)));
 		popupContent.innerHTML = "<ul id='historicalAccelerometerList'></ul>";
 		historicalAccelerometerList.innerHTML = theHistoricLog.map(n => {
 		    if (n.length === 0) return;
@@ -136,10 +136,10 @@
 		                ${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small> ${n.uncleLiamsKrazyKandleStandardDeviationScore.toString().substring(0, 3)} <small>(SD)</small>
 		            </span>
 		            <span class="multiplier">
-		                ${(n.currentCandleMultiplier).toString().substring(0, 4)}
+		                ${(n[window.candleOrVolumeMultiplier]).toString().substring(0, 4)}
 		            </span>
 		            <div class="TURBO-indicator">
-		                ${[...Array(Math.ceil(n.currentCandleMultiplier))].map(() => "<span class='bead-light'></span>").join('')}
+		                ${[...Array(Math.ceil(n[window.candleOrVolumeMultiplier]))].map(() => "<span class='bead-light'></span>").join('')}
 		            </div>
 		        </li>
 		    `
@@ -161,7 +161,7 @@
 						...getCandleComparison(item.candles)
 					}
 				});
-				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b.currentCandleMultiplier - a.currentCandleMultiplier);
+				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b[window.candleOrVolumeMultiplier] - a[window.candleOrVolumeMultiplier]);
 				window.currentResults = withMultiplierValueSorted;
 			    topMovers.innerHTML = withMultiplierValueSorted.map(n => `
 			    	<li id="${n.pair.symbol}">
@@ -175,10 +175,10 @@
 			    			${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small> ${n.uncleLiamsKrazyKandleStandardDeviationScore.toString().substring(0, 3)} <small>(SD)</small>
 			    		</span>
 			    		<span class="multiplier">
-			    			${(n.currentCandleMultiplier).toString().substring(0, 4)}
+			    			${(n[window.candleOrVolumeMultiplier]).toString().substring(0, 4)}
 			    		</span>
 						<div class="TURBO-indicator">
-							${[...Array(Math.ceil(n.currentCandleMultiplier))].map(() => "<span class='bead-light'></span>").join('')}
+							${[...Array(Math.ceil(n[window.candleOrVolumeMultiplier]))].map(() => "<span class='bead-light'></span>").join('')}
 			    	</li>
 			    `).join('');
 			});
@@ -193,7 +193,7 @@
 			await getTopMovers();
 			window.currentResults.slice(0, 40).map((result) => {
 				if(result.recentCandlesAverageAsPercent >= alertPercent.value 
-					&& result.currentCandleMultiplier >= alertCandleMultiplier.value) {
+					&& result[window.candleOrVolumeMultiplier] >= alertCandleMultiplier.value) {
 					beep();
 					console.log("ALERT: ", result);
 				}
@@ -201,6 +201,16 @@
 		}
 		getAndCheck(); // run one initially
 		window.alert = setInterval(getAndCheck, parseInt(alertInterval.value * 1000))
+	}
+
+	window.candleOrVolumeMultiplier = "currentCandleMultiplier";
+
+	const volumeForMultiplier = (yayOrNay) => {
+		if(useVolume.checked) {
+			window.candleOrVolumeMultiplier = "currentVolumeMultiplier"
+			return;
+		}
+		window.candleOrVolumeMultiplier = "currentCandleMultiplier";
 	}
 </script>
 <div id="popup" class="hide">
@@ -238,6 +248,9 @@
 <br />
 <input id="candleIntervalSelector" type="input" value="15m" />
 <label>candle interval (e.g. 1m, 1h, 4h, 1d etc...)</label>
+<br />
+<input id="useVolume" type="checkbox" onchange="volumeForMultiplier()" /><span>
+<label>Use volume for multiplier</label>
 
 <br />
 
