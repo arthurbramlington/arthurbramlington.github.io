@@ -143,6 +143,9 @@
 			font-size: 3rem;
 			cursor: pointer;
 		}
+		.alert-indicator {
+			background: rgba(255,255,255,0.1);
+		}
 
 	.led-MEGADANK {
 		width: 10px;
