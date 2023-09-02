@@ -79,6 +79,9 @@
     		color: red;
     		margin: 0.5rem 0;
 	    }
+	    input#timeTravelOffestSelector {
+	    	width: 7rem;
+	    }
 	    input[type="checkbox"] {
 	    	background: rgba(0,0,0,0.4);
 		    appearance: none;
