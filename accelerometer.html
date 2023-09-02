@@ -200,12 +200,19 @@
 		clearInterval(window.alert);
 		const getAndCheck = async () => {
 			await getTopMovers();
+			const qualifyingPairs = [];
 			window.currentResults.slice(0, 40).map((result) => {
 				if(result.recentCandlesAverageAsPercent >= alertPercent.value 
 					&& result[window.candleOrVolumeMultiplier] >= alertCandleMultiplier.value) {
 					beep();
+					qualifyingPairs.push(result.pair.symbol)
 					console.log("ALERT: ", result);
 				}
+			});
+			// add indicator
+			[...document.querySelectorAll(".alert-indicator")].map(el => el.classList.remove("alert-indicator"))
+			qualifyingPairs.map((symbol) => {
+				document.querySelector(`#${symbol}`).classList.add('alert-indicator');
 			});
 		}
 		getAndCheck(); // run one initially
