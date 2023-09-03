@@ -58,6 +58,7 @@
 
 	// W I N D O W  V A R S
 	window.candleOrVolumeMultiplier = "currentCandleMultiplier";
+	window.sortBy = window.candleOrVolumeMultiplier;
 	window.timeTravelOffset = 0;
 	// W I N D O W  V A R S  E N D
 
@@ -167,7 +168,7 @@
 						...getCandleComparison(item.candles)
 					}
 				});
-				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b[window.candleOrVolumeMultiplier] - a[window.candleOrVolumeMultiplier]);
+				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b[window.sortBy] - a[window.sortBy]);
 				window.currentResults = withMultiplierValueSorted;
 			    topMovers.innerHTML = withMultiplierValueSorted.map(n => `
 			    	<li id="${n.pair.symbol}">
@@ -207,7 +208,7 @@
 					&& result[window.candleOrVolumeMultiplier] >= alertCandleMultiplier.value) {
 					beep();
 					qualifyingPairs.push(result.pair.symbol)
-					console.log("ALERT: ", result.pair.symbol, result);
+					console.log("ALERT: ", new Date().toISOString(), result.pair.symbol, result);
 				}
 			});
 			// add indicator
@@ -226,6 +227,14 @@
 			return;
 		}
 		window.candleOrVolumeMultiplier = "currentCandleMultiplier";
+	}
+
+	const changeSort = (yayOrNay) => {
+		if(sortByAverageCandles.checked) {
+			window.sortBy = "recentCandlesAverageAsPercent";
+			return;
+		}
+		window.sortBy = window.candleOrVolumeMultiplier;
 	}
 </script>
 <div id="popup" class="hide">
@@ -269,6 +278,9 @@
 <br />
 <input id="useVolume" type="checkbox" onchange="volumeForMultiplier()" /><span>
 <label>Use volume for multiplier</label>
+<br />
+<input id="sortByAverageCandles" type="checkbox" onchange="changeSort()" /><span>
+<label>Sort by recent average candles</label>
 
 <br />
 
