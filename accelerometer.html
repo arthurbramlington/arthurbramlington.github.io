@@ -199,6 +199,7 @@
 		beep();
 		clearInterval(window.alert);
 		const getAndCheck = async () => {
+			console.log("Listening...", new Date().toISOString());
 			await getTopMovers();
 			const qualifyingPairs = [];
 			window.currentResults.slice(0, 40).map((result) => {
