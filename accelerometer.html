@@ -206,7 +206,7 @@
 					&& result[window.candleOrVolumeMultiplier] >= alertCandleMultiplier.value) {
 					beep();
 					qualifyingPairs.push(result.pair.symbol)
-					console.log("ALERT: ", result);
+					console.log("ALERT: ", result.pair.symbol, result);
 				}
 			});
 			// add indicator
@@ -276,10 +276,10 @@
 	<input id="alertInterval" type="number" value="30" />
 	<label>Alert interval</label>
 	<br />
-	<input id="alertPercent" type="number" value="0.2" />
+	<input id="alertPercent" type="number" value="0.6" />
 	<label>Alert percent</label>
 	<br />
-	<input id="alertCandleMultiplier" type="number" value="6" />
+	<input id="alertCandleMultiplier" type="number" value="4" />
 	<label>Alert candle multiplier</label>
 	<br />
 	<button onclick="startAlert()">RINGA-DING-DING</button>
