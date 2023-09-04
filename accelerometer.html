@@ -346,6 +346,52 @@
 		// but then I suppose this is just to point me in the right direction and I can analyse it myself.
 		// try this on 1m with a long number of candles to analyse.
 	}
+
+/*
+// A   L I V E   T R A C K E R   O F   T H E   M O M E N T U M   F O L L O W E R
+// FFS come back to this after dark, don't waste time on stuff like this when you've got so many useful things to do.
+var pc = (a, b) => {
+    if (a === b) return 0; // avoid any floating point crazyness
+    return (100 - (b / (a / 100))) * -1;
+}
+var getPrice = () => parseFloat(document.querySelector('.buttonText-hw_3o_pb').innerText);
+var price = getPrice();
+var goingLong = true;
+var totalPot = 100;
+var lastBuy = price;
+var transactionPercent = 1;
+var feesAsPercent = 0.2;
+var engine = setInterval(() => {
+    price = getPrice();
+    console.log("pot: ", totalPot);
+    const percentChange = pc(lastBuy, price);
+    if(Math.abs(0 - percentChange) > transactionPercent) {
+        if(goingLong) {
+            if(percentChange > 0) {
+                totalPot = totalPot * ((100 + (percentChange - feesAsPercent)) / 100);
+                lastBuy = price;
+                console.log("long win");
+            }else {
+                totalPot = totalPot * ((100 - (percentChange + feesAsPercent)) / 100);
+                goingLong = false;
+                lastBuy = price;
+                console.log("long lose, switching to short");
+            }
+        } else {
+            if(percentChange < 0) {
+                totalPot = totalPot * ((100 + (percentChange - feesAsPercent)) / 100);
+                lastBuy = price;
+                console.log("short win");
+            }else {
+                totalPot = totalPot * ((100 - (percentChange + feesAsPercent)) / 100);
+                goingLong = true;
+                lastBuy = price;
+                console.log("short lose, switching to long");
+            }
+        }
+    }
+}, 500);*/
+	
 </script>
 
 </body>
