@@ -83,7 +83,7 @@
 	    const currentVolume = currentCandle[5];
 	    console.log();
 	    const recentVolumeAverage = remainingCandles.reduce((accumulator, candle) => (accumulator + parseFloat(candle[5])), 0) / remainingCandles.length;
-	    const currentVolumeMultiplier = currentVolume / recentVolumeAverage;
+	    const currentVolumeMultiplier = (!currentVolume || !recentVolumeAverage) ? 0 : currentVolume / recentVolumeAverage;
 
 	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, currentVolumeMultiplier, uncleLiamsKrazyKandleStandardDeviationScore};
 	}
