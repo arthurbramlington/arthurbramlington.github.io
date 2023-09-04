@@ -193,6 +193,7 @@
 			    	: ``;
 			});
 		}).catch(e => console.log(e.message));
+		iWillMoveThisToANewPageSoon()
 		return "FINISHED";
 	}
 
@@ -311,6 +312,41 @@
 </div>
 
 <ol id="topMovers" class="top-accelerators-list"></ol>
+
+<script>
+	const iWillMoveThisToANewPageSoon = () => { // the idea of this is to find something that's cycling nicely
+		const colour = (candle) => {
+		    const open = parseFloat(candle[1]);
+		    const close = parseFloat(candle[4])
+		    if(open === close) return "n"
+		    return open > close ? "r" : "g";
+		}
+		var reddiesAndGreenies = window.currentResults.map((chart) => { // surely it also matters if the sequences alternate. How uniform they are. This might need more than just a count.
+		    let prevVal = null;
+		    let sequentials = {r: 0, g: 0};
+		    chart.candles.map(candle => {
+		        const thisColour = colour(candle);
+		        if(thisColour === "n"){
+		            prevVal = null;
+		            return;
+		        }
+		        if(!prevVal) {
+		            prevVal = thisColour;
+		            return;
+		        }
+		        if(prevVal === thisColour) {
+		            sequentials[thisColour] = sequentials[thisColour] + 1;
+		        }
+		        prevVal = thisColour;
+		    })
+		    const total = sequentials.r + sequentials.g;
+		    return {symbol: chart.pair.symbol, sequentials, total, equalityScore: total - Math.abs(sequentials.r - sequentials.g)};
+		})
+		console.log(reddiesAndGreenies.sort((a, b) => b.equalityScore - a.equalityScore)); // NOTE: this never counts the first of a sequence, so the numbers fired out aren't totally accurate. I should fix it but CBA today, I need to do something non-crypto for a while.
+		// but then I suppose this is just to point me in the right direction and I can analyse it myself.
+		// try this on 1m with a long number of candles to analyse.
+	}
+</script>
 
 </body>
 
