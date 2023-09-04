@@ -358,21 +358,24 @@ var getPrice = () => parseFloat(document.querySelector('.buttonText-hw_3o_pb').i
 var price = getPrice();
 var goingLong = true;
 var totalPot = 100;
+var totalPotAsIfFeesDontExist = 100;
 var lastBuy = price;
 var transactionPercent = 1;
 var feesAsPercent = 0.2;
 var engine = setInterval(() => {
     price = getPrice();
-    console.log("pot: ", totalPot);
+    console.log("pot: ", totalPot, "totalPotAsIfFeesDontExist: ", totalPotAsIfFeesDontExist);
     const percentChange = pc(lastBuy, price);
     if(Math.abs(0 - percentChange) >= transactionPercent) {
         if(goingLong) {
             if(percentChange > 0) {
                 totalPot = totalPot * ((100 + (percentChange - feesAsPercent)) / 100);
+                totalPotAsIfFeesDontExist = totalPotAsIfFeesDontExist * ((100 + percentChange) / 100);
                 lastBuy = price;
                 console.log("long win");
             }else {
                 totalPot = totalPot * ((100 + (percentChange - feesAsPercent)) / 100);
+                totalPotAsIfFeesDontExist = totalPotAsIfFeesDontExist * ((100 + percentChange) / 100);
                 goingLong = false;
                 lastBuy = price;
                 console.log("long lose, switching to short");
@@ -380,10 +383,12 @@ var engine = setInterval(() => {
         } else {
             if(percentChange < 0) {
                 totalPot = totalPot * ((100 + ((percentChange * -1) - feesAsPercent)) / 100);
+                totalPotAsIfFeesDontExist = totalPotAsIfFeesDontExist * ((100 + (percentChange * -1)) / 100);
                 lastBuy = price;
                 console.log("short win");
             }else {
                 totalPot = totalPot * ((100 - (percentChange + feesAsPercent)) / 100);
+                totalPotAsIfFeesDontExist = totalPotAsIfFeesDontExist * ((100 - (percentChange)) / 100);
                 goingLong = true;
                 lastBuy = price;
                 console.log("short lose, switching to long");
