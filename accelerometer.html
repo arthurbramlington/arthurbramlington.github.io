@@ -365,21 +365,21 @@ var engine = setInterval(() => {
     price = getPrice();
     console.log("pot: ", totalPot);
     const percentChange = pc(lastBuy, price);
-    if(Math.abs(0 - percentChange) > transactionPercent) {
+    if(Math.abs(0 - percentChange) >= transactionPercent) {
         if(goingLong) {
             if(percentChange > 0) {
                 totalPot = totalPot * ((100 + (percentChange - feesAsPercent)) / 100);
                 lastBuy = price;
                 console.log("long win");
             }else {
-                totalPot = totalPot * ((100 - (percentChange + feesAsPercent)) / 100);
+                totalPot = totalPot * ((100 + (percentChange - feesAsPercent)) / 100);
                 goingLong = false;
                 lastBuy = price;
                 console.log("long lose, switching to short");
             }
         } else {
             if(percentChange < 0) {
-                totalPot = totalPot * ((100 + (percentChange - feesAsPercent)) / 100);
+                totalPot = totalPot * ((100 + ((percentChange * -1) - feesAsPercent)) / 100);
                 lastBuy = price;
                 console.log("short win");
             }else {
@@ -390,7 +390,8 @@ var engine = setInterval(() => {
             }
         }
     }
-}, 500);*/
+}, 500);
+*/
 	
 </script>
 
