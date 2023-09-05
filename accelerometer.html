@@ -397,6 +397,16 @@ var engine = setInterval(() => {
     }
 }, 500);
 */
+
+/*
+// run this on the accelerators page with 101 candle count and 1m interval
+var movingAverageList = window.currentResults.map((p) => {
+    const m = new MovAvg(100);
+    p.candles.map(c => m.addNewPrice(parseFloat(c[4])));
+    return {symbol: p.pair.symbol, currentAvg: m.valueHistory, mostRecentChange: m.mostRecentChange()};
+});
+console.log("H I G H E S T   M O V I N G   A V E R A G E S :   ", movingAverageList.sort((a, b) => b.mostRecentChange - a.mostRecentChange))
+*/
 	
 </script>
 
