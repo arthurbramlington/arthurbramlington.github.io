@@ -1,0 +1,163 @@
+<html>
+<body style="padding: 100px;">
+	<head>
+		<link rel="stylesheet" href="styles.css">
+		<script src="https://code.highcharts.com/stock/highstock.js"></script>
+		<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+		<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+	</head>
+<script>
+
+	// U T I L  F U N C S
+	var pc = (a, b) => {
+	    if (a === b) return 0; // avoid any floating point crazyness
+	    return (100 - (b / (a / 100))) * -1;
+	}
+	var changeByXPercent = (targ, perc) => (((perc / 100) + 1) * targ);
+
+	class MovAvg {
+	    constructor(interval) {
+	        this.interval = interval;
+	        this.priceHistory = [];
+	        this.valueHistory = [];
+	    }
+
+	    addNewPrice(price) {
+	        this.priceHistory.push(price);
+	        if (this.priceHistory.length < this.interval) return;
+	        const slicedRange = this.priceHistory.slice(this.priceHistory.length - this.interval, this.priceHistory.length);
+	        const currentAvg = slicedRange.reduce((a, cv) => a + cv) / slicedRange.length
+	        this.valueHistory.push(currentAvg);
+	    }
+
+	    mostRecentValue(num = 1) {
+	        if (num > this.valueHistory.length) {
+	            return this.valueHistory;
+	        }
+	        const lastIndex = this.valueHistory.length;
+	        return this.valueHistory.slice(lastIndex - num, lastIndex);
+	    }
+
+	    mostRecentChange() {
+	        if (this.valueHistory < 2) return 0;
+	        const r = this.mostRecentValue(2);
+	        return pc(r[0], r[1]);
+	    }
+	}
+	// U T I L   F U N C S   E N D
+
+	// W I N D O W  V A R S
+	window.timeTravelOffset = 0;
+	// W I N D O W  V A R S  E N D
+
+	const popupToggle = () => popup.classList.toggle('hide');
+
+	const getTopMovers = async () => {
+		const candleCount = parseInt(timeframeSelector.value);
+		const candleInterval = candleIntervalSelector.value;
+		window.timeTravelOffset = parseInt(timeTravelOffestSelector.value);
+		await fetch('https://api.binance.com/api/v3/exchangeInfo').then(data => data.json()).then(async (i) => {
+			var usdtList = i.symbols.filter((p) => p.quoteAsset === "USDT" && p.status === "TRADING")
+			await Promise.all(usdtList.map((p) => {
+				return fetch(`https://api.binance.com/api/v3/klines?symbol=${p.symbol}&interval=${candleInterval}&limit=${candleCount + window.timeTravelOffset}`).then(data => data.json()).then(candles => ({pair: p, candles: candles.slice(0, candles.length - window.timeTravelOffset)})).catch(e => console.log(e.message))
+			})).then((values) => {
+				window.allCandles = values;
+
+				// run this on the accelerators page with 101 candle count and 1m interval
+				const movingAverageList = values.map((p) => {
+				    const m = new MovAvg(parseInt(movingAverageLength.value));
+				    p.candles.map(c => m.addNewPrice(parseFloat(c[4])));
+				    return {symbol: p.pair.symbol, averagesHistory: m.valueHistory, mostRecentChange: m.mostRecentChange(), fullChartData: p};
+				});
+				const resultsSortedByMovingAverage = sortDescending.checked ? movingAverageList.sort((a, b) => a.mostRecentChange - b.mostRecentChange) : movingAverageList.sort((a, b) => b.mostRecentChange - a.mostRecentChange);
+				console.log("H I G H E S T   M O V I N G   A V E R A G E S :   ", resultsSortedByMovingAverage)
+
+				window.currentResults = resultsSortedByMovingAverage;
+				
+				topMovers.innerHTML = "";
+			    
+			    resultsSortedByMovingAverage.map((n, i) => {
+			    	if(i < parseInt(showTheTop.value)) {
+				    	chartContainer = document.createElement('li');
+						chartContainer.setAttribute("id", n.symbol);
+						chartContainer.setAttribute("class", "with-chart");
+				    	topMovers.appendChild(chartContainer);
+			    	    Highcharts.stockChart(n.symbol, {
+					        rangeSelector: {
+					            selected: 1
+					        },
+
+					        title: {
+					            text: n.symbol
+					        },
+
+					        series: [{
+					            type: 'candlestick',
+					            name: 'P E N I S',
+					            data: n.fullChartData.candles.map(candle => candle.map(candleValue => parseFloat(candleValue)).slice(0, 5)),
+					        }]
+					    });
+			    	}else {
+			    		chartContainer = document.createElement('li');
+			    		chartContainer.innerHTML = `${n.symbol}: ${n.mostRecentChange}`
+				    	topMovers.appendChild(chartContainer);
+			    	}
+				}).join('');
+			    timeTravelOffestLatestCandleDisplay.innerHTML = (window.timeTravelOffset > 0) 
+			    	? `most recent candle open time: <span style="color: yellow;">${new Date(resultsSortedByMovingAverage[0].candles[resultsSortedByMovingAverage[0].candles.length - 1][0])}</span>`
+			    	: ``;
+			});
+		}).catch(e => console.log(e.message));
+		return "FINISHED";
+	}
+
+</script>
+<div id="popup" class="hide">
+	<div id="popupClose" onclick="popupToggle()">X</div>
+	<div id="popupContent"></div>
+</div>
+<nav>
+	<a href="index.html">H O M E</a>
+	<span> / </span>
+	<a href="accelerometer.html">A C C E L E R O M E T E R</a>
+	<span> / </span>
+	<a href="top-moving-averages.html">S M O O T H  G A I N E R Z</a>
+</nav>
+<h1>smooth gainerz ;)</h1>
+
+<hr />
+<strong>To-do</strong>
+<ul>
+	<li>Continue being sexy and desirable to women</li>
+</ul>
+<hr />
+
+<h2>Top Moving averages</h2>
+<input id="timeframeSelector" type="number" value="101" />
+<label>candle count</label>
+<br />
+<input id="candleIntervalSelector" type="input" value="1m" />
+<label>candle interval (e.g. 1m, 1h, 4h, 1d etc...)</label>
+<br />
+<input id="movingAverageLength" type="input" value="100" />
+<label>Moving average length</label>
+<br />
+<input id="showTheTop" type="input" value="10" />
+<label>Show the top...</label>
+<br />
+<input id="timeTravelOffestSelector" type="input" value="0" />
+<label>candle offset (look into the past) - <span id="timeTravelOffestLatestCandleDisplay"></span></label>
+<br />
+<input id="sortDescending" type="checkbox" /><span>
+<label>Sort by descending?</label>
+
+<br />
+<div id="launchSection">
+	<button onclick="getTopMovers()">Launch</button>
+</div>
+
+<ol id="topMovers" class="top-accelerators-list"></ol>
+
+</body>
+
+</html>
