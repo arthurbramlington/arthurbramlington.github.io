@@ -11,6 +11,10 @@
 	    ol li.isOnIgnorelist {
 	    	opacity: 0.5;
 	    }
+	    ol li.with-chart {
+	    	width: 800px;
+    		height: 550px;
+	    }
 	    button {
 	    	background: none;
 		    border: 1px solid green;
