@@ -271,6 +271,7 @@ var danumba = pc(parseFloat(a[0][1]), parseFloat(a[0][4])); // the first step wi
 	}).catch(e => console.log("problem getting coins traded on futures", e.message));
 
 	var getTopMovers = (minutes = 60, candleInterval = "1m") => {
+		loadingSpinner.classList.add('spinner');
 		fetch('https://api.binance.com/api/v3/exchangeInfo').then(data => data.json()).then((i) => {
 			var usdtList = i.symbols.filter((p) => p.quoteAsset === "USDT" && p.status === "TRADING")
 			Promise.all(usdtList.map((p) => {
@@ -296,6 +297,7 @@ var danumba = pc(parseFloat(a[0][1]), parseFloat(a[0][4])); // the first step wi
 			    topMovers.innerHTML = resultsSorted.map(x => `<li id="${x.pair.symbol}" class="${futuresLabel(x.pair.symbol)} ${x.pair.isMarginTradingAllowed ? 'margin-trading-allowed' : ''}"><span onclick="toggleWatchlist('${x.pair.symbol}')">${x.pair.symbol}: ${x.percentChange}&nbsp;(weighted gain: ${x.weightedGainScore})&nbsp;(${x.fluctuationScore}) [percent traveled (the lower the number the more direct the gain or loss)${x.percentGainToPercentTraveledScore}]</span>&nbsp;<button onclick="toggleIgnorelist('${x.pair.symbol}')" class='small'>ignore</button></li>`).join('');
 			    updateWatchlistClasses();
 			    updateIgnorelistClasses();
+			    loadingSpinner.classList.remove('spinner');
 			});
 		}).catch(e => console.log(e.message));
 	}
@@ -606,6 +608,7 @@ x.map((can, index) => {
 <label>candle interval (e.g. 1m, 1h, 4h, 1d etc...)</label>
 <br />
 <button onclick="getTopMovers(parseInt(topMoverTimeframe.value), candleIntervalInput.value)">get dem hoes</button>
+<div id="loadingSpinner"></div>
 <ol id="topMovers"></ol>
 </body>
 <!--
