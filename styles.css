@@ -191,6 +191,28 @@
 		margin-left: 10px;
 	}
 
+	.spinner::after {
+	  animation: ascii-cycle 0.75s infinite;
+	}
+	
+	@keyframes ascii-cycle {
+	  0% {
+	    content: "|";
+	  }
+	  25% {
+	    content: "/";
+	  }
+	  50% {
+	    content: "-";
+	  }
+	  75% {
+	    content: "\\";
+	  }
+	  100% {
+	    content: "|";
+	  }
+	}
+
 	/* U N C L E   L I A M ' S   T U R B O   I N D I C A T O R */
 
 	.TURBO-indicator {
