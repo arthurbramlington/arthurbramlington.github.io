@@ -193,6 +193,7 @@
 
 	.spinner::after {
 	  animation: ascii-cycle 0.75s infinite;
+		content: "PENIS";
 	}
 	
 	@keyframes ascii-cycle {
