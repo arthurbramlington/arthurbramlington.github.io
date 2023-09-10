@@ -153,6 +153,7 @@
 	}
 
 	const getTopMovers = async () => {
+		loadingSpinner.classList.add('spinner');
 		const candleCount = parseInt(timeframeSelector.value);
 		const candleInterval = candleIntervalSelector.value;
 		window.timeTravelOffset = parseInt(timeTravelOffestSelector.value);
@@ -194,6 +195,7 @@
 			});
 		}).catch(e => console.log(e.message));
 		iWillMoveThisToANewPageSoon()
+		loadingSpinner.classList.remove('spinner');
 		return "FINISHED";
 	}
 
@@ -314,6 +316,8 @@
 		<path class="st0" d="M20,25c0,2.2-1.8,4-4,4s-4-1.8-4-4"/>
 	</svg>
 </div>
+
+<div id="loadingSpinner"></div>
 
 <ol id="topMovers" class="top-accelerators-list"></ol>
 
