@@ -100,7 +100,7 @@
 					    });
 			    	}else {
 			    		chartContainer = document.createElement('li');
-			    		chartContainer.innerHTML = `${n.symbol}: ${n.mostRecentChange}${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
+			    		chartContainer.innerHTML = `${i + 1}: ${n.symbol}: ${n.mostRecentChange}${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
 				    	topMovers.appendChild(chartContainer);
 			    	}
 				}).join('');
