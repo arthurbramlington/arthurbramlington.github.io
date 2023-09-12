@@ -80,12 +80,13 @@
 	    const currentCandleMultiplier = !currentCandleChange || !recentCandlesAverage ? 0 : currentCandleChange / recentCandlesAverage;
 	    
 	    // volume percent change
-	    const currentVolume = currentCandle[5];
-	    console.log();
+	    const currentVolume = parseFloat(currentCandle[5]);
+	    const currentPrice = parseFloat(currentCandle[4]);
+	    const currentVolumeUsdt = currentVolume * currentPrice;
 	    const recentVolumeAverage = remainingCandles.reduce((accumulator, candle) => (accumulator + parseFloat(candle[5])), 0) / remainingCandles.length;
 	    const currentVolumeMultiplier = (!currentVolume || !recentVolumeAverage) ? 0 : currentVolume / recentVolumeAverage;
 
-	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, currentVolumeMultiplier, uncleLiamsKrazyKandleStandardDeviationScore};
+	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, currentVolumeMultiplier, uncleLiamsKrazyKandleStandardDeviationScore, currentVolumeUsdt};
 	}
 
 	const historicLog = (analPeriod, symbol, candleCount) => {
@@ -196,6 +197,10 @@
 		}).catch(e => console.log(e.message));
 		iWillMoveThisToANewPageSoon()
 		loadingSpinner.classList.remove('spinner');
+
+		// console log for the biggest volumes delete if you like
+		window.currentResults.toSorted((a,b) => b.currentVolumeUsdt - a.currentVolumeUsdt).map(item => console.log(`${item.pair.symbol}: ${item.currentVolumeUsdt.toLocaleString("en-US")}`))
+		
 		return "FINISHED";
 	}
 
@@ -414,6 +419,15 @@ var movingAverageList = window.currentResults.map((p) => {
     return {symbol: p.pair.symbol, currentAvg: m.valueHistory, mostRecentChange: m.mostRecentChange()};
 });
 console.log("H I G H E S T   M O V I N G   A V E R A G E S :   ", movingAverageList.sort((a, b) => b.mostRecentChange - a.mostRecentChange))
+*/
+
+/*
+T O P  C U R R E N T  C A N D L E  V O L U M E S
+write in the console:
+window.currentResults.toSorted((a,b) => b.currentVolumeUsdt - a.currentVolumeUsdt).map(item => console.log(`${item.pair.symbol}: ${item.currentVolumeUsdt.toLocaleString("en-US")}`))
+
+write at the bottom of the page:
+window.currentResults.toSorted((a,b) => b.currentVolumeUsdt - a.currentVolumeUsdt).map(item => document.body.innerHTML += ` <br />${item.currentVolumeUsdt.toLocaleString("en-US")} - ${item.pair.symbol}`)
 */
 	
 </script>
