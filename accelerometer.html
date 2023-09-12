@@ -142,8 +142,11 @@
 		            <span class="recent-percentages">
 		                ${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small> ${n.uncleLiamsKrazyKandleStandardDeviationScore.toString().substring(0, 3)} <small>(SD)</small>
 		            </span>
+		            <span class="current-volume">
+		    			${(n.currentVolumeUsdt / 1000000).toString().substring(0, 5)}m <small>(vol)</small>
+		    		</span>
 		            <span class="multiplier">
-		                ${(n[window.candleOrVolumeMultiplier]).toString().substring(0, 4)}
+		                ${(n[window.candleOrVolumeMultiplier]).toString().substring(0, 4)}x
 		            </span>
 		            <div class="TURBO-indicator">
 		                ${[...Array(Math.ceil(n[window.candleOrVolumeMultiplier]))].map(() => "<span class='bead-light'></span>").join('')}
@@ -183,8 +186,11 @@
 			    		<span class="recent-percentages">
 			    			${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small> ${n.uncleLiamsKrazyKandleStandardDeviationScore.toString().substring(0, 3)} <small>(SD)</small>
 			    		</span>
+			    		<span class="current-volume">
+			    			${(n.currentVolumeUsdt / 1000000).toString().substring(0, 5)}m <small>(vol)</small>
+			    		</span>
 			    		<span class="multiplier">
-			    			${(n[window.candleOrVolumeMultiplier]).toString().substring(0, 4)}
+			    			${(n[window.candleOrVolumeMultiplier]).toString().substring(0, 4)}x
 			    		</span>
 						<div class="TURBO-indicator">
 							${[...Array(Math.ceil(n[window.candleOrVolumeMultiplier]))].map(() => "<span class='bead-light'></span>").join('')}
@@ -197,10 +203,6 @@
 		}).catch(e => console.log(e.message));
 		iWillMoveThisToANewPageSoon()
 		loadingSpinner.classList.remove('spinner');
-
-		// console log for the biggest volumes delete if you like
-		window.currentResults.toSorted((a,b) => b.currentVolumeUsdt - a.currentVolumeUsdt).map(item => console.log(`${item.pair.symbol}: ${item.currentVolumeUsdt.toLocaleString("en-US")}`))
-		
 		return "FINISHED";
 	}
 
@@ -237,13 +239,6 @@
 		window.candleOrVolumeMultiplier = "currentCandleMultiplier";
 	}
 
-	const changeSort = (yayOrNay) => {
-		if(sortByAverageCandles.checked) {
-			window.sortBy = "recentCandlesAverageAsPercent";
-			return;
-		}
-		window.sortBy = window.candleOrVolumeMultiplier;
-	}
 </script>
 <div id="popup" class="hide">
 	<div id="popupClose" onclick="popupToggle()">X</div>
@@ -288,11 +283,15 @@
 <input id="timeTravelOffestSelector" type="input" value="0" />
 <label>candle offset (look into the past) - <span id="timeTravelOffestLatestCandleDisplay"></span></label>
 <br />
-<input id="useVolume" type="checkbox" onchange="volumeForMultiplier()" /><span>
+<input id="useVolume" type="checkbox" onchange="volumeForMultiplier()" />
 <label>Use volume for multiplier</label>
 <br />
-<input id="sortByAverageCandles" type="checkbox" onchange="changeSort()" /><span>
-<label>Sort by recent average candle size</label>
+<select id="sortByDropdown" onchange="window.sortBy = this.value">
+	<option value="currentCandleMultiplier">Current candle multiplier</option>
+	<option value="recentCandlesAverageAsPercent">recent average candle size</option>
+	<option value="currentVolumeUsdt">Current volume (usdt)</option>
+</select>
+<label>Sort by</label>
 
 <br />
 
