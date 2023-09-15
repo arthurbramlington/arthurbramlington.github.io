@@ -48,6 +48,8 @@
 
 	// W I N D O W  V A R S
 	window.timeTravelOffset = 0;
+	window.candleOrVolumeMultiplier = "recentCandlesAverageAsPercent";
+	window.sortBy = window.candleOrVolumeMultiplier;
 	window.ignoreList = [
 		"BUSDUSDT",
 		"USDPUSDT",
@@ -127,29 +129,32 @@
 					}
 				});
 
-				const resultsSortedByMovingAverage = withMultiplierValue.sort((a, b) => b.mostRecentChange - a.mostRecentChange);
-				console.log("H I G H E S T   M O V I N G   A V E R A G E S :   ", resultsSortedByMovingAverage)
+				const resultsSorted = withMultiplierValue.sort((a,b) => b[window.sortBy] - a[window.sortBy]);
+				console.log("H I G H E S T   M O V I N G   A V E R A G E S :   ", resultsSorted)
 
-				window.currentResults = resultsSortedByMovingAverage;
+				window.currentResults = resultsSorted;
 				
 				topMovers.innerHTML = "";
 			    
-				topMovers.innerHTML = resultsSortedByMovingAverage.map(n => `
+				topMovers.innerHTML = resultsSorted.map(n => `
 			    	<li id="${n.symbol}">
-			    		<span class="symbol" onclick="toggleIgnoreList('${n.symbol}')">
+			    		<span class="symbol" onclick="getAndShowHistoricLog(\'${candleInterval}\', \'${n.symbol}\', \'${candleCount}\')">
 			    			${n.symbol}
 			    		</span>
-						</div><div class="TURBO-indicator">
+						</div><div class="TURBO-indicator hide">
 							<span class='bead-light ${candleSizeColourDecider(n.recentCandlesAverageAsPercent)}'></span>
 						</div>
 			    		<span class="recent-percentages">
 			    			${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small> ${n.uncleLiamsKrazyKandleStandardDeviationScore.toString().substring(0, 3)} <small>(SD)</small>
 			    		</span>
-			    		<span class="multiplier">
-			    			${(n.currentCandleMultiplier).toString().substring(0, 4)}
+			    		<span class="current-volume">
+			    			${(n.currentVolumeUsdt / 1000000).toString().substring(0, 5)}m <small>(vol)</small>
 			    		</span>
-						<div class="TURBO-indicator">
-							${[...Array(Math.ceil(n.currentCandleMultiplier))].map(() => "<span class='bead-light'></span>").join('')}
+			    		<span class="multiplier">
+			    			${(n[window.candleOrVolumeMultiplier]).toString().substring(0, 4)}x
+			    		</span>
+						<div class="TURBO-indicator hide">
+							${[...Array(Math.ceil(n[window.candleOrVolumeMultiplier]))].map(() => "<span class='bead-light'></span>").join('')}
 			    	</li>
 			    `).join('');
 			});
@@ -170,7 +175,6 @@
 				const currentPrice = parseFloat(result.fullChartData.candles[result.fullChartData.candles.length - 1][4]);
 				const currentMovingAverageValue = result.averagesHistory[result.averagesHistory.length - 1];
 				const percentDifferenceAlwaysPositive = Math.abs(0 - pc(currentPrice, currentMovingAverageValue));
-				console.log('• • • • • • • • ', "result.symbol: ", result.symbol, "currentPrice: ",currentPrice, "currentMovingAverageValue: ", currentMovingAverageValue, 'percentDifferenceAlwaysPositive: ', percentDifferenceAlwaysPositive, "parseFloat(percentAllowance.value): ", parseFloat(percentAllowance.value));
 				if(percentDifferenceAlwaysPositive <= parseFloat(percentAllowance.value)) {
 					beep();
 					qualifyingPairs.push(result.symbol)
@@ -185,6 +189,14 @@
 		}
 		getAndCheck(); // run one initially
 		window.alert = setInterval(getAndCheck, parseInt(alertInterval.value * 1000))
+	}
+
+	const volumeForMultiplier = (yayOrNay) => {
+		if(useVolume.checked) {
+			window.candleOrVolumeMultiplier = "currentVolumeMultiplier"
+			return;
+		}
+		window.candleOrVolumeMultiplier = "currentCandleMultiplier";
 	}
 
 	const toggleIgnoreList = (symbol) => {
@@ -227,7 +239,7 @@
 </ul>
 <hr />
 
-<h2>Top Moving averages</h2>
+<h2>find candles crossing an MA line</h2>
 <input id="timeframeSelector" type="number" value="201" />
 <label>candle count</label>
 <br />
@@ -242,8 +254,19 @@
 <br />
 <input id="percentAllowance" type="input" value="0.1" />
 <label>Percent allowance</label>
-
+<hr />
+<input id="useVolume" type="checkbox" onchange="volumeForMultiplier()" />
+<label>Use volume for multiplier</label>
 <br />
+<select id="sortByDropdown" onchange="window.sortBy = this.value">
+	<option value="currentCandleMultiplier">Current candle multiplier</option>
+	<option value="recentCandlesAverageAsPercent" selected="selected">recent average candle size</option>
+	<option value="currentVolumeUsdt">Current volume (usdt)</option>
+	<option value="mostRecentChange">Most recent MA change</option>
+</select>
+<label>Sort by</label>
+<hr />
+
 <div id="launchSection">
 	<button onclick="startAlert()">
 		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Icons" viewBox="0 0 32 32" xml:space="preserve" width="1.5rem" style="cursor: pointer;">
