@@ -138,7 +138,7 @@
 			    
 				topMovers.innerHTML = resultsSorted.map(n => `
 			    	<li id="${n.symbol}">
-			    		<span class="symbol" onclick="getAndShowHistoricLog(\'${candleInterval}\', \'${n.symbol}\', \'${candleCount}\')">
+			    		<span class="symbol" onclick="toggleIgnoreList('${n.symbol}')">
 			    			${n.symbol}
 			    		</span>
 						</div><div class="TURBO-indicator hide">
