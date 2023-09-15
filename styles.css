@@ -225,6 +225,22 @@
 	  }
 	}
 
+	#ignoreListDisplay {
+		position: fixed;
+	    right: 10%;
+	    bottom: 10%;
+	    border: 1px solid orange;
+	    padding: 3rem;
+	    box-shadow: 0 0 7px 0px orange;
+	    color: orange;
+	}
+	#ignoreListDisplay:before {
+		content: "- Ignore list -";
+	    position: absolute;
+	    top: -1.5rem;
+	    left: 0.9rem;
+	}
+
 	/* U N C L E   L I A M ' S   T U R B O   I N D I C A T O R */
 
 	.TURBO-indicator {
