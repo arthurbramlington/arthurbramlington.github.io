@@ -136,7 +136,7 @@
 			    
 				topMovers.innerHTML = resultsSortedByMovingAverage.map(n => `
 			    	<li id="${n.symbol}">
-			    		<span class="symbol" onclick="toggleIgnoreList('${n.symbol}\')">
+			    		<span class="symbol" onclick="toggleIgnoreList('${n.symbol}')">
 			    			${n.symbol}
 			    		</span>
 						</div><div class="TURBO-indicator">
@@ -198,7 +198,7 @@
 	}
 
 	const updateIgnoreList = () => {
-		ignoreListDisplay.innerHTML = window.ignoreList.map(symbol => `<span>${symbol}</span><br />`).join('');
+		ignoreListDisplay.innerHTML = window.ignoreList.map(symbol => `<span onclick="toggleIgnoreList('${symbol}')">${symbol}</span><br />`).join('');
 	}
 
 </script>
