@@ -148,7 +148,7 @@
 		    box-shadow: 0 0 2px 1px #aeaeff, 0 0 85px 23px #aeaeff;
 		}
 		.hide {
-			display: none;
+			display: none!important;
 		}
 		#popupClose {
 		    margin: 1rem auto;
