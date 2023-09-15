@@ -1,0 +1,267 @@
+<html>
+<body style="padding: 100px;">
+	<head>
+		<link rel="stylesheet" href="styles.css">
+		<script src="https://code.highcharts.com/stock/highstock.js"></script>
+		<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+		<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+	</head>
+<script>
+
+	// U T I L  F U N C S
+	var pc = (a, b) => {
+	    if (a === b) return 0; // avoid any floating point crazyness
+	    return (100 - (b / (a / 100))) * -1;
+	}
+	var changeByXPercent = (targ, perc) => (((perc / 100) + 1) * targ);
+
+	class MovAvg {
+	    constructor(interval) {
+	        this.interval = interval;
+	        this.priceHistory = [];
+	        this.valueHistory = [];
+	    }
+
+	    addNewPrice(price) {
+	        this.priceHistory.push(price);
+	        if (this.priceHistory.length < this.interval) return;
+	        const slicedRange = this.priceHistory.slice(this.priceHistory.length - this.interval, this.priceHistory.length);
+	        const currentAvg = slicedRange.reduce((a, cv) => a + cv) / slicedRange.length
+	        this.valueHistory.push(currentAvg);
+	    }
+
+	    mostRecentValue(num = 1) {
+	        if (num > this.valueHistory.length) {
+	            return this.valueHistory;
+	        }
+	        const lastIndex = this.valueHistory.length;
+	        return this.valueHistory.slice(lastIndex - num, lastIndex);
+	    }
+
+	    mostRecentChange() {
+	        if (this.valueHistory < 2) return 0;
+	        const r = this.mostRecentValue(2);
+	        return pc(r[0], r[1]);
+	    }
+	}
+	// U T I L   F U N C S   E N D
+
+	// W I N D O W  V A R S
+	window.timeTravelOffset = 0;
+	window.ignoreList = [
+		"BUSDUSDT",
+		"USDPUSDT",
+		"USDCUSDT",
+		"TUSDUSDT",
+	];
+	// W I N D O W  V A R S  E N D
+
+	const getCandleComparison = (candles, includeWick = false) => {
+	    const range = includeWick ? {a: 2, b: 3}: {a: 1, b: 4};
+	    const currentCandle = candles.slice(-1)[0];
+	    const remainingCandles = candles.slice(0, candles.length - 1);
+	    const currentCandleChange = Math.abs(parseFloat(currentCandle[range.a]) - parseFloat(currentCandle[range.b]));
+	    const totalChange = remainingCandles.reduce((accumulator, candle) => accumulator + Math.abs(parseFloat(candle[range.a]) - parseFloat(candle[range.b])), 0)
+	    const recentCandlesAverage = totalChange / remainingCandles.length;
+	    const recentCandlesAverageAsPercent = pc(parseFloat(currentCandle[1]), parseFloat(currentCandle[1]) + recentCandlesAverage); // NOTE: using currentCandle[1] as an approx current price, this is lazy, change it at some point. This whole function could be using percent rather than the price difference if that's easier.
+
+		// standard deviation
+	    const standardDeviation = Math.sqrt(remainingCandles.reduce((accumulator, candle) => accumulator + Math.pow((Math.abs(parseFloat(candle[range.a]) - parseFloat(candle[range.b]))) - recentCandlesAverage, 2), 0) / remainingCandles.length);
+	    const uncleLiamsKrazyKandleStandardDeviationScore = standardDeviation / recentCandlesAverage; // e.g. 0 is no deviation, 3 is a deviation of 3x the average
+
+	    const currentCandleMultiplier = !currentCandleChange || !recentCandlesAverage ? 0 : currentCandleChange / recentCandlesAverage;
+	    
+	    // volume percent change
+	    const currentVolume = parseFloat(currentCandle[5]);
+	    const currentPrice = parseFloat(currentCandle[4]);
+	    const currentVolumeUsdt = currentVolume * currentPrice;
+	    const recentVolumeAverage = remainingCandles.reduce((accumulator, candle) => (accumulator + parseFloat(candle[5])), 0) / remainingCandles.length;
+	    const currentVolumeMultiplier = (!currentVolume || !recentVolumeAverage) ? 0 : currentVolume / recentVolumeAverage;
+
+	    return {recentCandlesAverageAsPercent, currentCandleMultiplier, currentVolumeMultiplier, uncleLiamsKrazyKandleStandardDeviationScore, currentVolumeUsdt};
+	}
+
+	const candleSizeColourDecider = (sizePercent) => {
+		// this is very crude but fuck it. Currently these are modeled on the 15m candles, but they should of course vary. Also just randomly chosen hahahahah
+		if(sizePercent < 0.2) {
+			return " override red";
+		} else if (sizePercent < 0.8) {
+			return " override amber";
+		} else if (sizePercent < 1.3) {
+			return " override green";
+		} else {
+			return " override white-hot";
+		}
+	}
+
+	const beep = () => {
+	    var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");  
+	    snd.play();
+	}
+
+	const popupToggle = () => popup.classList.toggle('hide');
+
+	const getTopMovers = async () => {
+		loadingSpinner.classList.add('spinner');
+		const candleCount = parseInt(timeframeSelector.value);
+		const candleInterval = candleIntervalSelector.value;
+		//window.timeTravelOffset = parseInt(timeTravelOffestSelector.value); // not implemented right now
+		await fetch('https://api.binance.com/api/v3/exchangeInfo').then(data => data.json()).then(async (i) => {
+			var usdtList = i.symbols.filter((p) => p.quoteAsset === "USDT" && p.status === "TRADING")
+			await Promise.all(usdtList.map((p) => {
+				return fetch(`https://api.binance.com/api/v3/klines?symbol=${p.symbol}&interval=${candleInterval}&limit=${candleCount + window.timeTravelOffset}`).then(data => data.json()).then(candles => ({pair: p, candles: candles.slice(0, candles.length - window.timeTravelOffset)})).catch(e => console.log(e.message))
+			})).then((values) => {
+				window.allCandles = values;
+
+				// run this on the accelerators page with 101 candle count and 1m interval
+				const movingAverageList = values.map((p) => {
+				    const m = new MovAvg(parseInt(movingAverageLength.value));
+				    p.candles.map(c => m.addNewPrice(parseFloat(c[4])));
+				    return {symbol: p.pair.symbol, averagesHistory: m.valueHistory, mostRecentChange: m.mostRecentChange(), fullChartData: p};
+				});
+
+				const withMultiplierValue = movingAverageList.map(item => {
+					return {
+						...item,
+						...getCandleComparison(item.fullChartData.candles)
+					}
+				});
+
+				const resultsSortedByMovingAverage = withMultiplierValue.sort((a, b) => b.mostRecentChange - a.mostRecentChange);
+				console.log("H I G H E S T   M O V I N G   A V E R A G E S :   ", resultsSortedByMovingAverage)
+
+				window.currentResults = resultsSortedByMovingAverage;
+				
+				topMovers.innerHTML = "";
+			    
+				topMovers.innerHTML = resultsSortedByMovingAverage.map(n => `
+			    	<li id="${n.symbol}">
+			    		<span class="symbol" onclick="toggleIgnoreList('${n.symbol}\')">
+			    			${n.symbol}
+			    		</span>
+						</div><div class="TURBO-indicator">
+							<span class='bead-light ${candleSizeColourDecider(n.recentCandlesAverageAsPercent)}'></span>
+						</div>
+			    		<span class="recent-percentages">
+			    			${(n.recentCandlesAverageAsPercent).toString().substring(0, 4)}% <small>(rctavg)</small> ${n.uncleLiamsKrazyKandleStandardDeviationScore.toString().substring(0, 3)} <small>(SD)</small>
+			    		</span>
+			    		<span class="multiplier">
+			    			${(n.currentCandleMultiplier).toString().substring(0, 4)}
+			    		</span>
+						<div class="TURBO-indicator">
+							${[...Array(Math.ceil(n.currentCandleMultiplier))].map(() => "<span class='bead-light'></span>").join('')}
+			    	</li>
+			    `).join('');
+			});
+		}).catch(e => console.log(e.message));
+		loadingSpinner.classList.remove('spinner');
+		return "FINISHED";
+	}
+
+	const startAlert = () => {
+		beep();
+		clearInterval(window.alert);
+		const getAndCheck = async () => {
+			console.log("Listening...", new Date().toISOString());
+			await getTopMovers();
+			const qualifyingPairs = [];
+			window.currentResults.map((result) => {
+				if(window.ignoreList.includes(result.symbol)) return;
+				const currentPrice = parseFloat(result.fullChartData.candles[result.fullChartData.candles.length - 1][4]);
+				const currentMovingAverageValue = result.averagesHistory[result.averagesHistory.length - 1];
+				const percentDifferenceAlwaysPositive = Math.abs(0 - pc(currentPrice, currentMovingAverageValue));
+				console.log('• • • • • • • • ', "result.symbol: ", result.symbol, "currentPrice: ",currentPrice, "currentMovingAverageValue: ", currentMovingAverageValue, 'percentDifferenceAlwaysPositive: ', percentDifferenceAlwaysPositive, "parseFloat(percentAllowance.value): ", parseFloat(percentAllowance.value));
+				if(percentDifferenceAlwaysPositive <= parseFloat(percentAllowance.value)) {
+					beep();
+					qualifyingPairs.push(result.symbol)
+					console.log("ALERT: ", new Date().toISOString(), result.symbol, result);
+				}
+			});
+			// add indicator
+			[...document.querySelectorAll(".alert-indicator")].map(el => el.classList.remove("alert-indicator"))
+			qualifyingPairs.map((symbol) => {
+				document.querySelector(`#${symbol}`).classList.add('alert-indicator');
+			});
+		}
+		getAndCheck(); // run one initially
+		window.alert = setInterval(getAndCheck, parseInt(alertInterval.value * 1000))
+	}
+
+	const toggleIgnoreList = (symbol) => {
+		const symbolIndex = window.ignoreList.findIndex(x => x === symbol);
+		if(symbolIndex === -1) {
+			window.ignoreList.push(symbol);
+		} else {
+			window.ignoreList.splice(symbolIndex, 1);
+		}
+		updateIgnoreList();
+	}
+
+	const updateIgnoreList = () => {
+		ignoreListDisplay.innerHTML = window.ignoreList.map(symbol => `<span>${symbol}</span><br />`).join('');
+	}
+
+</script>
+<div id="popup" class="hide">
+	<div id="popupClose" onclick="popupToggle()">X</div>
+	<div id="popupContent"></div>
+</div>
+<div id="ignoreListDisplay"></div>
+<nav>
+	<a href="index.html">H O M E</a>
+	<span> / </span>
+	<a href="accelerometer.html">A C C E L E R O M E T E R</a>
+	<span> / </span>
+	<a href="top-moving-averages.html">S M O O T H  G A I N E R Z</a>
+	<span> / </span>
+	<a href="cross-alerter.html">C R O S S  A L E R T E R</a>
+</nav>
+<h1>Cross Alerter</h1>
+
+<hr />
+<strong>To-do</strong>
+<ul>
+	<li>Basically rebuild this one, it's filth. Build it starting from accelerometer and put the shared functions in a new file scripts.js</li>
+	<li>Although I'm blatantly not going to do that am I? :') just be aware it's filth and don't model anything else on this.</li>
+	<li>Continue having the sickest dance moves in town.</li>
+</ul>
+<hr />
+
+<h2>Top Moving averages</h2>
+<input id="timeframeSelector" type="number" value="101" />
+<label>candle count</label>
+<br />
+<input id="candleIntervalSelector" type="input" value="1d" />
+<label>candle interval (e.g. 1m, 1h, 4h, 1d etc...)</label>
+<br />
+<input id="movingAverageLength" type="input" value="100" />
+<label>Moving average length</label>
+<br />
+<input id="alertInterval" type="input" value="30" />
+<label>Alert interval</label>
+<br />
+<input id="percentAllowance" type="input" value="0.1" />
+<label>Percent allowance</label>
+
+<br />
+<div id="launchSection">
+	<button onclick="startAlert()">
+		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Icons" viewBox="0 0 32 32" xml:space="preserve" width="1.5rem" style="cursor: pointer;">
+			<style type="text/css">
+				.st0{fill:none;stroke:#00ff00;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+			</style>
+			<path class="st0" d="M27.8,23.2l-1.1-1.7c-1.9-2.8-2.9-6.1-2.9-9.5c0-3.6-2.4-6.5-5.6-7.5C17.9,3.6,17,3,16,3s-1.9,0.6-2.2,1.5  c-3.2,1-5.6,3.9-5.6,7.5c0,3.4-1,6.7-2.9,9.5l-1.1,1.7C3.7,24,4.2,25,5.2,25h21.6C27.8,25,28.3,24,27.8,23.2z"/>
+			<path class="st0" d="M20,25c0,2.2-1.8,4-4,4s-4-1.8-4-4"/>
+		</svg>
+	</button>
+</div>
+
+<div id="loadingSpinner"></div>
+
+<ol id="topMovers" class="top-accelerators-list"></ol>
+
+<script type="text/javascript">updateIgnoreList()</script>
+
+</body>
+
+</html>
