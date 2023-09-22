@@ -168,11 +168,12 @@
 			})).then((values) => {
 				window.allCandles = values;
 				const withMultiplierValue = values.map(item => {
+					if(item.candles.length < candleCount) return;
 					return {
 						...item,
 						...getCandleComparison(item.candles)
 					}
-				});
+				}).filter(item => !!item);
 				const withMultiplierValueSorted = withMultiplierValue.sort((a,b) => b[window.sortBy] - a[window.sortBy]);
 				window.currentResults = withMultiplierValueSorted;
 			    topMovers.innerHTML = withMultiplierValueSorted.map(n => `
