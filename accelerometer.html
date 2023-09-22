@@ -169,6 +169,7 @@
 				window.allCandles = values;
 				const withMultiplierValue = values.map(item => {
 					if(item.candles.length < candleCount) return;
+					if(item.pair.symbol === "FTTUSDT") return; // FTT has a huge year-long gap in candle data, I'm not sure why binance have allowed that
 					return {
 						...item,
 						...getCandleComparison(item.candles)
