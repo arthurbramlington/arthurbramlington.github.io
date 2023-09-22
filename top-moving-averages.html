@@ -89,7 +89,7 @@
 					        },
 
 					        title: {
-					            text: `${n.symbol}${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
+					            text: `${n.symbol} (${n.mostRecentChange}) ${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
 					        },
 
 					        series: [{
@@ -100,7 +100,7 @@
 					    });
 			    	}else {
 			    		chartContainer = document.createElement('li');
-			    		chartContainer.innerHTML = `${i + 1}: ${n.symbol} (${n.mostRecentChange}): ${n.mostRecentChange}${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
+			    		chartContainer.innerHTML = `${i + 1}: ${n.symbol} ${n.mostRecentChange}${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
 				    	topMovers.appendChild(chartContainer);
 			    	}
 				}).join('');
