@@ -5,6 +5,7 @@
 		<script src="https://code.highcharts.com/stock/highstock.js"></script>
 		<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
 		<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+		<script src="https://code.highcharts.com/stock/indicators/indicators.js"></script>
 	</head>
 <script>
 
@@ -91,12 +92,29 @@
 					        title: {
 					            text: `${n.symbol} (${n.mostRecentChange.toFixed(2)}) ${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
 					        },
-
 					        series: [{
 					            type: 'candlestick',
 					            name: 'P E N I S',
+					            id: "penis",
 					            data: n.fullChartData.candles.map(candle => candle.map(candleValue => parseFloat(candleValue)).slice(0, 5)),
-					        }],
+					        },
+					        {
+						      type: 'sma',
+						      linkedTo: "penis",
+						      params: {
+						        period: parseInt(movingAverageLength.value)
+						      },
+						      color: "orange",
+				            	marker: {
+						        enabled: false
+						      }
+						    }],
+					        chart: {
+						    	backgroundColor: "rgba(0,0,0,1)",
+						    },
+						     yAxis: {
+						      gridLineColor: 'rgba(0,255,0,0.5)',
+						    },
 					plotOptions: {
 						candlestick: {
 							color: '#ef5351',
