@@ -13,6 +13,13 @@
 	window.fetchList = {};
 	// W I N D O W  V A R S  E N D
 
+	// set Highcharts timezone
+	Highcharts.setOptions({
+	    time: {
+	        timezoneOffset: new Date().getTimezoneOffset()
+	    }
+	});
+
 	const popupToggle = () => popup.classList.toggle('hide');
 
 	const simulate = (fetchData) => {
@@ -20,14 +27,25 @@
 	    var sellAfter = parseInt(userInput_sellAfter.value); // including the first candle where the guy happened
 	    var fees = parseFloat(userInput_fees.value);
 	    var smaPercentChangeLowerLimit = userInput_smaPercentChangeLowerLimit.value;
+	    var averageCandleSizeMinimum = parseFloat(userInput_averageCandleSizeMinimum.value);
+	    var averageCandleRange = parseInt(userInput_averageCandleRange.value);
 	    var pot = 0;
 	    var firstOpenedAbove = [];
+	    var soldLog = [];
 	    var lastBuyPrice = null;
 	    var lastBuyIndex = null;
-	    const settle = (buyPrice, sellPrice) => pc(buyPrice, sellPrice) - fees;
-	    const highChartCandleFormatter = (candle, index, buyOrSell) => {
+
+	    const settle = (buyPrice, sellPrice, candle) => {
+	    	// NOTE: this returns the loss or gain from this one trade, not the running total
+	    	const lossOrGain = pc(buyPrice, sellPrice) - fees;
+	    	pot += lossOrGain;
+	    	soldLog.push({lossOrGain, potAtTimeOfSale: JSON.stringify(pot), candle})
+	    	return lossOrGain;
+	    }
+
+	    const highChartCandleFormatter = (candle, buyOrSell, additionalInformation) => {
             var returnObj = {
-	            x: index,
+	            x: candle[0],
 	            open: parseFloat(candle[1]),
 	            high: parseFloat(candle[2]),
 	            low: parseFloat(candle[3]),
@@ -43,7 +61,7 @@
             } else if(buyOrSell === "sell") {
 				returnObj["dataLabels"] = {
 					enabled: true,
-					format: 'S',
+					format: `S ${additionalInformation}`,
 					y: 10,
 					color: "red"
 				}
@@ -52,37 +70,38 @@
 	    }
 	    const fetchDataHighchartFormat =  fetchData.map((candle, index) => {
 	        smaLine.addNewPrice(parseFloat(candle[4]));
-	        if(index === 0) return highChartCandleFormatter(candle, index);
+	        if(index === 0) return highChartCandleFormatter(candle);
 	        if(lastBuyPrice) {
 	            if (index === lastBuyIndex + sellAfter) {
-	                pot = settle(lastBuyPrice, parseFloat(candle[4]));
+	            	const settledLossOrGain = settle(lastBuyPrice, parseFloat(candle[4]), candle);
 	                lastBuyPrice = null;
 	                lastBuyIndex = null;
-	                return highChartCandleFormatter(candle, index, "sell");
+	                return highChartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
 	            };
-	            return highChartCandleFormatter(candle, index);
+	            return highChartCandleFormatter(candle);
 	        }
 	        if(
 	        	parseFloat(candle[1]) > smaLine.mostRecentValue() 
 	        	&& parseFloat(fetchData[index - 1][1]) <= smaLine.mostRecentValue() 
 	        	&& smaLine.mostRecentChange() > smaPercentChangeLowerLimit
+	        	&& averageCandleSize(fetchData.slice(index - averageCandleRange, index)) >= averageCandleSizeMinimum
 	        ){
 	            if(sellAfter === 0) {
-	                pot = settle(candle[1], candle[4]);
+	            	const settledLossOrGain = settle(parseFloat(candle[1]), parseFloat(candle[4]), candle)
 	                lastBuyPrice = null;
 	                lastBuyIndex = null;
-	                return highChartCandleFormatter(candle, index, "sell");
+	                return highChartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
 	            }
 	            lastBuyPrice = parseFloat(candle[4]);
 	            lastBuyIndex = index;
 	            firstOpenedAbove.push(candle);
-	            return highChartCandleFormatter(candle, index, "buy");
+	            return highChartCandleFormatter(candle, "buy");
 	        }
-	        return highChartCandleFormatter(candle, index);
+	        return highChartCandleFormatter(candle);
 	    });
-	    firstOpenedAbove.map(n => console.log(new Date(n[0])));
-	    TEMP_results.innerHTML = pot;
-        console.log('• • • • ', fetchDataHighchartFormat)
+	    console.log('soldLog ', soldLog)
+	    resultsLog.innerHTML = "<h3>Log:</h3>" + soldLog.map(n => `${new Date(n.candle[0]).toGMTString()} / ${n.lossOrGain.toFixed(2)}% / running P&L: ${n.potAtTimeOfSale}`).join('<br>');
+	    resultsOverview.innerHTML = `<h3>gain/loss: ${pot.toFixed(2)}% over ${firstOpenedAbove.length} buys</h3>`;
 	    drawChart(fetchDataHighchartFormat); // this needs to add buy and sell points onto the chart with profit/loss and fees
 	}
 
@@ -93,7 +112,7 @@
 				selected: 1
 			},
 			title: {
-				text: `${userInput_symbol.value}`
+				text: `${userInput_symbol.value.toUpperCase()}`
 			},
 			series: [
 				{
@@ -130,14 +149,20 @@
 
 	const run = async () => {
 		loadingSpinner.classList.add('spinner');
-		const fetchUrl = `https://api.binance.com/api/v3/klines?symbol=${userInput_symbol.value}&interval=${userInput_candleInterval.value}&limit=1000`
-		if(!!window.fetchList[fetchUrl]) { // caching
-			simulate(window.fetchList[fetchUrl]);
-		} else {
-			await fetch(fetchUrl).then(raw => raw.json()).then(fetchData => {
-		    	simulate(fetchData);
-		    	window.fetchList[fetchUrl] = fetchData;
-			})
+		errorMessage.innerHTML = "";
+		try{
+			const fetchUrl = `https://api.binance.com/api/v3/klines?symbol=${userInput_symbol.value.toUpperCase()}&interval=${userInput_candleInterval.value}&limit=1000`
+			if(!!window.fetchList[fetchUrl]) { // caching
+				simulate(window.fetchList[fetchUrl]);
+			} else {
+				await fetch(fetchUrl).then(raw => raw.json()).then(fetchData => {
+			    	simulate(fetchData);
+			    	window.fetchList[fetchUrl] = fetchData;
+				})
+			}
+		} catch (error) {
+  			console.error('Error in run()', error);
+  			errorMessage.innerHTML = error;
 		}
 		loadingSpinner.classList.remove('spinner');
 		return "FINISHED";
@@ -167,11 +192,15 @@
 	<li>Try/catch error logging for user too and exit run() func</li>
 	<li>capitalise the symbol in run()</li>
 	<li>REALLY needs a limit to the period you're analysing, this isn't something you would run non stop on any chart.</li>
-	<li>In relation to the above, a stipulation of recent average candle size would be amazing too, but using a different interval if the user requires.</li>
+	<li>Add a "plug-pull" point, where you might automatically sell if the loss gets too much</li>
+	<li>recent average candle should a different interval and count if the user requires.</li>
 	<li>seeing the candle dates would be great</li>
 	<li>cache with fetch string</li>
 	<li>needs neutral or positive MA stipulation</li>
 	<li>needs a list of the top recent avg candles</li>
+	<li>add time limit for cache</li>
+	<li>Add a stipulation to how far it needs to have dipped below the MA before coming back above?</li>
+	<li>CLEARLY MAKES GOOD MONEY ON POSITIVE CHARTS HUH? MAYBe it's worth having a positive 200MA (or longer) stipulation</li>
 </ul>
 <hr />
 <h2>Buy Over SMA Line</h2>
@@ -190,17 +219,26 @@
 <input id="userInput_smaPercentChangeLowerLimit" type="number" value="0" />
 <label>SMA percent change lower limit (0 is a flat line)</label>
 <br />
-<input id="userInput_sellAfter" type="input" value="2" />
+<input id="userInput_sellAfter" type="input" value="3" />
 <label>candles to sell after</label>
+<br />
+<hr />
+<input id="userInput_averageCandleSizeMinimum" type="input" value="0.2" />
+<label>Only buy when average candle size is >= (%)</label>
+<br />
+<input id="userInput_averageCandleRange" type="input" value="45" />
+<label>Average candle range</label>
 <br />
 <div id="launchSection">
 	<button onclick="run()">Launch</button>
 </div>
 
 <div id="loadingSpinner"></div>
+<div id="errorMessage"></div>
 
-<div id="TEMP_results"></div>
+<div id="resultsOverview"></div>
 <div id="theChart"></div>
+<div id="resultsLog"></div>
 
 </body>
 
