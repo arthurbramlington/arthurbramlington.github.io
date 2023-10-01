@@ -2,53 +2,9 @@
 <body style="padding: 100px;">
 	<head>
 		<link rel="stylesheet" href="styles.css">
+		<script src="utilities.js"></script>
 	</head>
 <script>
-
-	// U T I L  F U N C S
-	var pc = (a, b) => {
-	    if (a === b) return 0; // avoid any floating point crazyness
-	    return (100 - (b / (a / 100))) * -1;
-	}
-	var changeByXPercent = (targ, perc) => (((perc / 100) + 1) * targ);
-	var avcan = (array, includeCurrentCandle = false, onlyUpperRange = false) => {
-	    const lowIndex = onlyUpperRange ? 1 : 3;
-	    const ranges = array.map(c => {
-	        return pc(parseFloat(c[lowIndex]), parseFloat(c[2]))
-	    });
-	    const rangesNew = includeCurrentCandle ? ranges : ranges.slice(0, ranges.length - 1);
-	    return rangesNew.reduce((a, b) => a + b, 0) / ranges.length
-	}
-
-	class MovAvg {
-	    constructor(interval) {
-	        this.interval = interval;
-	        this.priceHistory = [];
-	        this.valueHistory = [];
-	    }
-
-	    addNewPrice(price) {
-	        this.priceHistory.push(price);
-	        if (this.priceHistory.length < this.interval) return;
-	        const slicedRange = this.priceHistory.slice(this.priceHistory.length - this.interval, this.priceHistory.length);
-	        const currentAvg = slicedRange.reduce((a, cv) => a + cv) / slicedRange.length
-	        this.valueHistory.push(currentAvg);
-	    }
-
-	    mostRecentValue(num = 1) {
-	        if (num > this.valueHistory.length) {
-	            return this.valueHistory;
-	        }
-	        const lastIndex = this.valueHistory.length;
-	        return this.valueHistory.slice(lastIndex - num, lastIndex);
-	    }
-
-	    mostRecentChange() {
-	        if (this.valueHistory < 2) return 0;
-	        const r = this.mostRecentValue(2);
-	        return pc(r[0], r[1]);
-	    }
-	}
 
 	// W I T H  N O  T R A D I N G  A B O V E  M A 1 0 0
 	// still making profit, but how many more mistakes have I made :-/
