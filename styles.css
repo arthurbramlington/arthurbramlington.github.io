@@ -240,6 +240,9 @@
 	    top: -1.5rem;
 	    left: 0.9rem;
 	}
+	#theChart {
+		height: 800px;
+	}
 
 	/* U N C L E   L I A M ' S   T U R B O   I N D I C A T O R */
 
