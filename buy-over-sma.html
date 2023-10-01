@@ -2,6 +2,10 @@
 <body style="padding: 100px;">
 	<head>
 		<link rel="stylesheet" href="styles.css">
+		<script src="https://code.highcharts.com/stock/highstock.js"></script>
+		<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+		<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+		<script src="https://code.highcharts.com/stock/indicators/indicators.js"></script>
 		<script src="utilities.js"></script>
 	</head>
 <script>
@@ -15,36 +19,112 @@
 		var smaLine = new MovAvg(parseInt(userInput_smaLength.value));
 	    var sellAfter = parseInt(userInput_sellAfter.value); // including the first candle where the guy happened
 	    var fees = parseFloat(userInput_fees.value);
+	    var smaPercentChangeLowerLimit = userInput_smaPercentChangeLowerLimit.value;
 	    var pot = 0;
 	    var firstOpenedAbove = [];
 	    var lastBuyPrice = null;
 	    var lastBuyIndex = null;
-	    var settle = (buyPrice, sellPrice) => pc(buyPrice, sellPrice) - fees;
-	    fetchData.map((candle, index) => {
+	    const settle = (buyPrice, sellPrice) => pc(buyPrice, sellPrice) - fees;
+	    const highChartCandleFormatter = (candle, index, buyOrSell) => {
+            var returnObj = {
+	            x: index,
+	            open: parseFloat(candle[1]),
+	            high: parseFloat(candle[2]),
+	            low: parseFloat(candle[3]),
+	            close: parseFloat(candle[4])
+            }
+            if(buyOrSell === "buy") {
+				returnObj["dataLabels"] = {
+					enabled: true,
+					format: 'B',
+					y: 10,
+					color: "green"
+				}
+            } else if(buyOrSell === "sell") {
+				returnObj["dataLabels"] = {
+					enabled: true,
+					format: 'S',
+					y: 10,
+					color: "red"
+				}
+            }
+            return returnObj;
+	    }
+	    const fetchDataHighchartFormat =  fetchData.map((candle, index) => {
 	        smaLine.addNewPrice(parseFloat(candle[4]));
-	        if(index === 0) return;
+	        if(index === 0) return highChartCandleFormatter(candle, index);
 	        if(lastBuyPrice) {
 	            if (index === lastBuyIndex + sellAfter) {
 	                pot = settle(lastBuyPrice, parseFloat(candle[4]));
 	                lastBuyPrice = null;
 	                lastBuyIndex = null;
+	                return highChartCandleFormatter(candle, index, "sell");
 	            };
-	            return;
+	            return highChartCandleFormatter(candle, index);
 	        }
-	        if(parseFloat(candle[1]) > smaLine.mostRecentValue() && parseFloat(fetchData[index - 1][1]) <= smaLine.mostRecentValue()){
+	        if(
+	        	parseFloat(candle[1]) > smaLine.mostRecentValue() 
+	        	&& parseFloat(fetchData[index - 1][1]) <= smaLine.mostRecentValue() 
+	        	&& smaLine.mostRecentChange() > smaPercentChangeLowerLimit
+	        ){
 	            if(sellAfter === 0) {
 	                pot = settle(candle[1], candle[4]);
 	                lastBuyPrice = null;
 	                lastBuyIndex = null;
+	                return highChartCandleFormatter(candle, index, "sell");
 	            }
-	            console.log('••••mostRecentChange••••', smaLine.mostRecentChange())
 	            lastBuyPrice = parseFloat(candle[4]);
 	            lastBuyIndex = index;
 	            firstOpenedAbove.push(candle);
+	            return highChartCandleFormatter(candle, index, "buy");
 	        }
-	    })
+	        return highChartCandleFormatter(candle, index);
+	    });
 	    firstOpenedAbove.map(n => console.log(new Date(n[0])));
 	    TEMP_results.innerHTML = pot;
+        console.log('• • • • ', fetchDataHighchartFormat)
+	    drawChart(fetchDataHighchartFormat); // this needs to add buy and sell points onto the chart with profit/loss and fees
+	}
+
+	const drawChart = (fetchDataHighchartFormat) => {
+		Highcharts.stockChart("theChart", {
+			rangeSelector: {
+				selected: 1
+			},
+			title: {
+				text: `${userInput_symbol.value}`
+			},
+			series: [
+				{
+					type: 'candlestick',
+					id: "penis",
+					data: fetchDataHighchartFormat
+				},
+				{
+					type: 'sma',
+					linkedTo: "penis",
+					params: {
+						period: parseInt(userInput_smaLength.value)
+					},
+					color: "orange",
+					marker: {
+						enabled: false
+					}
+				}
+			],
+			chart: {
+				backgroundColor: "rgba(0,0,0,1)",
+			},
+			yAxis: {
+				gridLineColor: 'rgba(0,255,0,0.5)',
+			},
+			plotOptions: {
+				candlestick: {
+					color: '#ef5351',
+					upColor: '#26a79a'
+				}
+			}
+		});
 	}
 
 	const run = async () => {
@@ -83,7 +163,9 @@
 <hr />
 <strong>To-do</strong>
 <ul>
-	<li>draw onto a chart would be siiiiiiick</li>
+	<li>REALLY needs a limit to the period you're analysing, this isn't something you would run non stop on any chart.</li>
+	<li>In relation to the above, a stipulation of recent average candle size would be amazing too, but using a different interval if the user requires.</li>
+	<li>seeing the candle dates would be great</li>
 	<li>cache with fetch string</li>
 	<li>needs neutral or positive MA stipulation</li>
 	<li>needs a list of the top recent avg candles</li>
@@ -102,6 +184,9 @@
 <input id="userInput_smaLength" type="number" value="50" />
 <label>SMA length</label>
 <br />
+<input id="userInput_smaPercentChangeLowerLimit" type="number" value="0" />
+<label>SMA percent change lower limit (0 is a flat line)</label>
+<br />
 <input id="userInput_sellAfter" type="input" value="2" />
 <label>candles to sell after</label>
 <br />
@@ -112,6 +197,7 @@
 <div id="loadingSpinner"></div>
 
 <div id="TEMP_results"></div>
+<div id="theChart"></div>
 
 </body>
 
