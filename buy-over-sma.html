@@ -1,0 +1,118 @@
+<html>
+<body style="padding: 100px;">
+	<head>
+		<link rel="stylesheet" href="styles.css">
+		<script src="utilities.js"></script>
+	</head>
+<script>
+	// W I N D O W  V A R S
+	window.fetchList = {};
+	// W I N D O W  V A R S  E N D
+
+	const popupToggle = () => popup.classList.toggle('hide');
+
+	const simulate = (fetchData) => {
+		var smaLine = new MovAvg(parseInt(userInput_smaLength.value));
+	    var sellAfter = parseInt(userInput_sellAfter.value); // including the first candle where the guy happened
+	    var fees = parseFloat(userInput_fees.value);
+	    var pot = 0;
+	    var firstOpenedAbove = [];
+	    var lastBuyPrice = null;
+	    var lastBuyIndex = null;
+	    var settle = (buyPrice, sellPrice) => pc(buyPrice, sellPrice) - fees;
+	    fetchData.map((candle, index) => {
+	        smaLine.addNewPrice(parseFloat(candle[4]));
+	        if(index === 0) return;
+	        if(lastBuyPrice) {
+	            if (index === lastBuyIndex + sellAfter) {
+	                pot = settle(lastBuyPrice, parseFloat(candle[4]));
+	                lastBuyPrice = null;
+	                lastBuyIndex = null;
+	            };
+	            return;
+	        }
+	        if(parseFloat(candle[1]) > smaLine.mostRecentValue() && parseFloat(fetchData[index - 1][1]) <= smaLine.mostRecentValue()){
+	            if(sellAfter === 0) {
+	                pot = settle(candle[1], candle[4]);
+	                lastBuyPrice = null;
+	                lastBuyIndex = null;
+	            }
+	            console.log('••••mostRecentChange••••', smaLine.mostRecentChange())
+	            lastBuyPrice = parseFloat(candle[4]);
+	            lastBuyIndex = index;
+	            firstOpenedAbove.push(candle);
+	        }
+	    })
+	    firstOpenedAbove.map(n => console.log(new Date(n[0])));
+	    TEMP_results.innerHTML = pot;
+	}
+
+	const run = async () => {
+		loadingSpinner.classList.add('spinner');
+		const fetchUrl = `https://api.binance.com/api/v3/klines?symbol=${userInput_symbol.value}&interval=${userInput_candleInterval.value}&limit=1000`
+		if(!!window.fetchList[fetchUrl]) { // caching
+			simulate(window.fetchList[fetchUrl]);
+		} else {
+			await fetch(fetchUrl).then(raw => raw.json()).then(fetchData => {
+		    	simulate(fetchData);
+		    	window.fetchList[fetchUrl] = fetchData;
+			})
+		}
+		loadingSpinner.classList.remove('spinner');
+		return "FINISHED";
+	}
+
+</script>
+<div id="popup" class="hide">
+	<div id="popupClose" onclick="popupToggle()">X</div>
+	<div id="popupContent"></div>
+</div>
+<nav>
+	<a href="index.html">H O M E</a>
+	<span> / </span>
+	<a href="accelerometer.html">A C C E L E R O M E T E R</a>
+	<span> / </span>
+	<a href="top-moving-averages.html">S M O O T H  G A I N E R Z</a>
+	<span> / </span>
+	<a href="cross-alerter.html">C R O S S  A L E R T E R</a>
+	<span> / </span>
+	<a href="buy-over-sma.html.html">B U Y  O V E R  S M A</a>
+</nav>
+<h1>Buy Over SMA Line</h1>
+
+<hr />
+<strong>To-do</strong>
+<ul>
+	<li>draw onto a chart would be siiiiiiick</li>
+	<li>cache with fetch string</li>
+	<li>needs neutral or positive MA stipulation</li>
+	<li>needs a list of the top recent avg candles</li>
+</ul>
+<hr />
+<h2>Buy Over SMA Line</h2>
+<input id="userInput_symbol" type="input" value="BTCUSDT" />
+<label>Symbol</label>
+<br />
+<input id="userInput_candleInterval" type="input" value="5m" />
+<label>candle interval (e.g. 1m, 1h, 4h, 1d etc...)</label>
+<br />
+<input id="userInput_fees" type="input" value="0.2" />
+<label>Trading fees</label>
+<br />
+<input id="userInput_smaLength" type="number" value="50" />
+<label>SMA length</label>
+<br />
+<input id="userInput_sellAfter" type="input" value="2" />
+<label>candles to sell after</label>
+<br />
+<div id="launchSection">
+	<button onclick="run()">Launch</button>
+</div>
+
+<div id="loadingSpinner"></div>
+
+<div id="TEMP_results"></div>
+
+</body>
+
+</html>
