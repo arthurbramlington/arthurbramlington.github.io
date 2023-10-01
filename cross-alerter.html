@@ -5,46 +5,9 @@
 		<script src="https://code.highcharts.com/stock/highstock.js"></script>
 		<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
 		<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+		<script src="utilities.js"></script>
 	</head>
 <script>
-
-	// U T I L  F U N C S
-	var pc = (a, b) => {
-	    if (a === b) return 0; // avoid any floating point crazyness
-	    return (100 - (b / (a / 100))) * -1;
-	}
-	var changeByXPercent = (targ, perc) => (((perc / 100) + 1) * targ);
-
-	class MovAvg {
-	    constructor(interval) {
-	        this.interval = interval;
-	        this.priceHistory = [];
-	        this.valueHistory = [];
-	    }
-
-	    addNewPrice(price) {
-	        this.priceHistory.push(price);
-	        if (this.priceHistory.length < this.interval) return;
-	        const slicedRange = this.priceHistory.slice(this.priceHistory.length - this.interval, this.priceHistory.length);
-	        const currentAvg = slicedRange.reduce((a, cv) => a + cv) / slicedRange.length
-	        this.valueHistory.push(currentAvg);
-	    }
-
-	    mostRecentValue(num = 1) {
-	        if (num > this.valueHistory.length) {
-	            return this.valueHistory;
-	        }
-	        const lastIndex = this.valueHistory.length;
-	        return this.valueHistory.slice(lastIndex - num, lastIndex);
-	    }
-
-	    mostRecentChange() {
-	        if (this.valueHistory < 2) return 0;
-	        const r = this.mostRecentValue(2);
-	        return pc(r[0], r[1]);
-	    }
-	}
-	// U T I L   F U N C S   E N D
 
 	// W I N D O W  V A R S
 	window.timeTravelOffset = 0;
