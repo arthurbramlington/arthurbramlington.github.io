@@ -92,7 +92,7 @@
 	                lastBuyIndex = null;
 	                return highChartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
 	            }
-	            lastBuyPrice = parseFloat(candle[4]);
+	            lastBuyPrice = parseFloat(candle[1]);
 	            lastBuyIndex = index;
 	            firstOpenedAbove.push(candle);
 	            return highChartCandleFormatter(candle, "buy");
@@ -100,7 +100,7 @@
 	        return highChartCandleFormatter(candle);
 	    });
 	    console.log('soldLog ', soldLog)
-	    resultsLog.innerHTML = "<h3>Log:</h3>" + soldLog.map(n => `${new Date(n.candle[0]).toGMTString()} / ${n.lossOrGain.toFixed(2)}% / running P&L: ${n.potAtTimeOfSale}`).join('<br>');
+	    resultsLog.innerHTML = "<h3>Log:</h3>" + soldLog.map(n => `${new Date(n.candle[0]).toLocaleString()} / <span style="color: ${n.lossOrGain >= 0 ? "green" : "red"}">${n.lossOrGain.toFixed(2)}%</span> / running P&L: ${n.potAtTimeOfSale}`).join('<br>');
 	    resultsOverview.innerHTML = `<h3>gain/loss: ${pot.toFixed(2)}% over ${firstOpenedAbove.length} buys</h3>`;
 	    drawChart(fetchDataHighchartFormat); // this needs to add buy and sell points onto the chart with profit/loss and fees
 	}
@@ -216,7 +216,7 @@
 <input id="userInput_smaLength" type="number" value="50" />
 <label>SMA length</label>
 <br />
-<input id="userInput_smaPercentChangeLowerLimit" type="number" value="0" />
+<input id="userInput_smaPercentChangeLowerLimit" type="number" value="0.03" />
 <label>SMA percent change lower limit (0 is a flat line)</label>
 <br />
 <input id="userInput_sellAfter" type="input" value="3" />
