@@ -26,6 +26,7 @@
 	    var lastBuyIndex = null;
 	    var chartMarkers = [];
 	    var chartVolume = [];
+	    var chartSma = [];
 
 	    const settle = (buyPrice, sellPrice, candle) => {
 	    	// NOTE: this returns the loss or gain from this one trade, not the running total
@@ -62,8 +63,14 @@
             };
 	    }
 	    const dataInChartFormat = fetchData.map((candle, index) => {
-	    	chartVolume.push({time: candle[0]/1000,value: parseFloat(candle[7])});
+
 	        smaLine.addNewPrice(parseFloat(candle[4]));
+	    	chartVolume.push({time: candle[0]/1000, value: parseFloat(candle[7])});
+	    	const smaMostRecentValue = smaLine.mostRecentValue();
+	    	if(smaMostRecentValue) {
+	    		chartSma.push({time: candle[0]/1000, value: smaMostRecentValue});	    		
+	    	}
+
 	        if(index === 0) return chartCandleFormatter(candle);
 	        if(lastBuyPrice) {
 	            if (index === lastBuyIndex + sellAfter) {
@@ -96,10 +103,10 @@
 	    console.log('soldLog ', soldLog)
 	    resultsLog.innerHTML = "<h3>Log:</h3>" + soldLog.map(n => `${new Date(n.candle[0]).toLocaleString()} / <span style="color: ${n.lossOrGain >= 0 ? "green" : "red"}">${n.lossOrGain.toFixed(2)}%</span> / running P&L: ${n.potAtTimeOfSale}`).join('<br>');
 	    resultsOverview.innerHTML = `<h3>gain/loss: ${pot.toFixed(2)}% over ${firstOpenedAbove.length} buys</h3>`;
-	    drawChart(dataInChartFormat, chartMarkers, chartVolume); // this needs to add buy and sell points onto the chart with profit/loss and fees
+	    drawChart(dataInChartFormat, chartMarkers, chartVolume, chartSma); // this needs to add buy and sell points onto the chart with profit/loss and fees
 	}
 
-	const drawChart = (chartData, markers, volumeData) => {
+	const drawChart = (chartData, markers, volumeData, smaData) => {
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
 		theChart.innerHTML = "";
@@ -131,6 +138,7 @@
 		    },
 		    timeScale: {
 		        borderColor: 'rgba(197, 203, 206, 0.8)',
+		        timeVisible: true,
 		    },
 		});
 
@@ -167,6 +175,17 @@
 			},
 		})
 		volumeSeries.setData(volumeData);
+
+		// SMA series
+		const smaSeries = chart.addLineSeries({
+			color: '#2962FF',
+			lineWidth: 2,
+			// disabling built-in price lines
+			lastValueVisible: false,
+			priceLineVisible: false,
+		});
+		smaSeries.setData(smaData);
+
 		//chart.timeScale().fitContent();
 	}
 
