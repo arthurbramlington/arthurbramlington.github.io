@@ -25,6 +25,7 @@
 	    var lastBuyPrice = null;
 	    var lastBuyIndex = null;
 	    var chartMarkers = [];
+	    var chartVolume = [];
 
 	    const settle = (buyPrice, sellPrice, candle) => {
 	    	// NOTE: this returns the loss or gain from this one trade, not the running total
@@ -61,6 +62,7 @@
             };
 	    }
 	    const dataInChartFormat = fetchData.map((candle, index) => {
+	    	chartVolume.push({time: candle[0]/1000,value: parseFloat(candle[7])});
 	        smaLine.addNewPrice(parseFloat(candle[4]));
 	        if(index === 0) return chartCandleFormatter(candle);
 	        if(lastBuyPrice) {
@@ -94,11 +96,15 @@
 	    console.log('soldLog ', soldLog)
 	    resultsLog.innerHTML = "<h3>Log:</h3>" + soldLog.map(n => `${new Date(n.candle[0]).toLocaleString()} / <span style="color: ${n.lossOrGain >= 0 ? "green" : "red"}">${n.lossOrGain.toFixed(2)}%</span> / running P&L: ${n.potAtTimeOfSale}`).join('<br>');
 	    resultsOverview.innerHTML = `<h3>gain/loss: ${pot.toFixed(2)}% over ${firstOpenedAbove.length} buys</h3>`;
-	    drawChart(dataInChartFormat, chartMarkers); // this needs to add buy and sell points onto the chart with profit/loss and fees
+	    drawChart(dataInChartFormat, chartMarkers, chartVolume); // this needs to add buy and sell points onto the chart with profit/loss and fees
 	}
 
-	const drawChart = (chartData, markers) => {
+	const drawChart = (chartData, markers, volumeData) => {
+		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
+		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
 		theChart.innerHTML = "";
+
+		// chart config
 		var chart = LightweightCharts.createChart("theChart", {
 		    width: 1400,
 		    height: 700,
@@ -128,6 +134,7 @@
 		    },
 		});
 
+		// condlestick series
 		var candleSeries = chart.addCandlestickSeries({
 			upColor: 'rgba(0, 155, 0, 1)',
 			downColor: 'rgba(155, 0, 0, 1)',
@@ -139,6 +146,28 @@
 
 		candleSeries.setData(chartData);
 		candleSeries.setMarkers(markers);
+
+		// volume series
+		const volumeSeries = chart.addHistogramSeries({
+			color: '#26a69a',
+			priceFormat: {
+				type: 'volume',
+			},
+			priceScaleId: '', // set as an overlay by setting a blank priceScaleId
+			// set the positioning of the volume series
+			scaleMargins: {
+				top: 0.7, // highest point of the series will be 70% away from the top
+				bottom: 0,
+			},
+		});
+		volumeSeries.priceScale().applyOptions({
+			scaleMargins: {
+				top: 0.7, // highest point of the series will be 70% away from the top
+				bottom: 0,
+			},
+		})
+		volumeSeries.setData(volumeData);
+		//chart.timeScale().fitContent();
 	}
 
 	const run = async () => {
@@ -195,12 +224,6 @@
 	<li>add time limit for cache</li>
 	<li>Add a stipulation to how far it needs to have dipped below the MA before coming back above?</li>
 	<li>CLEARLY MAKES GOOD MONEY ON POSITIVE CHARTS HUH? MAYBe it's worth having a positive 200MA (or longer) stipulation</li>
-	<li>OMG use trading view's light charts lib (the others are corporate only) see examples <a href="https://www.tradingview.com/lightweight-charts/">here</a> and <a href="https://tradingview.github.io/lightweight-charts/tutorials/how_to/series-markers#resources">here</a>. Omg it's so much better than Highcharts. Ho dang volume too?</li>
-	<pre>
-		https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
-		https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
-		fart
-	</pre>
 </ul>
 <hr />
 <h2>Buy Over SMA Line</h2>
