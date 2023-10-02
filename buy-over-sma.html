@@ -2,23 +2,13 @@
 <body style="padding: 100px;">
 	<head>
 		<link rel="stylesheet" href="styles.css">
-		<script src="https://code.highcharts.com/stock/highstock.js"></script>
-		<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
-		<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
-		<script src="https://code.highcharts.com/stock/indicators/indicators.js"></script>
+		<script src="libs/lightweight-charts.standalone.production.js"></script>
 		<script src="utilities.js"></script>
 	</head>
 <script>
 	// W I N D O W  V A R S
 	window.fetchList = {};
 	// W I N D O W  V A R S  E N D
-
-	// set Highcharts timezone
-	Highcharts.setOptions({
-	    time: {
-	        timezoneOffset: new Date().getTimezoneOffset()
-	    }
-	});
 
 	const popupToggle = () => popup.classList.toggle('hide');
 
@@ -34,6 +24,7 @@
 	    var soldLog = [];
 	    var lastBuyPrice = null;
 	    var lastBuyIndex = null;
+	    var chartMarkers = [];
 
 	    const settle = (buyPrice, sellPrice, candle) => {
 	    	// NOTE: this returns the loss or gain from this one trade, not the running total
@@ -43,42 +34,43 @@
 	    	return lossOrGain;
 	    }
 
-	    const highChartCandleFormatter = (candle, buyOrSell, additionalInformation) => {
-            var returnObj = {
-	            x: candle[0],
+	    const chartCandleFormatter = (candle, buyOrSell, additionalInformation) => {
+            if(buyOrSell === "buy") {
+				chartMarkers.push({
+					time: candle[0]/1000,
+					position: 'aboveBar',
+					color: 'rgba(0,200,0,1)',
+					shape: 'arrowDown',
+					text: `B${additionalInformation ? ' ' + additionalInformation : ''}`,
+				});
+            } else if(buyOrSell === "sell") {
+				chartMarkers.push({
+					time: candle[0]/1000,
+					position: 'aboveBar',
+					color: 'rgba(200,0,0,1)',
+					shape: 'arrowDown',
+					text: `S${additionalInformation ? ' ' + additionalInformation : ''}`,
+				});
+            }
+            return {
+	            time: candle[0]/1000,
 	            open: parseFloat(candle[1]),
 	            high: parseFloat(candle[2]),
 	            low: parseFloat(candle[3]),
 	            close: parseFloat(candle[4])
-            }
-            if(buyOrSell === "buy") {
-				returnObj["dataLabels"] = {
-					enabled: true,
-					format: 'B',
-					y: 10,
-					color: "green"
-				}
-            } else if(buyOrSell === "sell") {
-				returnObj["dataLabels"] = {
-					enabled: true,
-					format: `S ${additionalInformation}`,
-					y: 10,
-					color: "red"
-				}
-            }
-            return returnObj;
+            };
 	    }
-	    const fetchDataHighchartFormat =  fetchData.map((candle, index) => {
+	    const dataInChartFormat = fetchData.map((candle, index) => {
 	        smaLine.addNewPrice(parseFloat(candle[4]));
-	        if(index === 0) return highChartCandleFormatter(candle);
+	        if(index === 0) return chartCandleFormatter(candle);
 	        if(lastBuyPrice) {
 	            if (index === lastBuyIndex + sellAfter) {
 	            	const settledLossOrGain = settle(lastBuyPrice, parseFloat(candle[4]), candle);
 	                lastBuyPrice = null;
 	                lastBuyIndex = null;
-	                return highChartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
+	                return chartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
 	            };
-	            return highChartCandleFormatter(candle);
+	            return chartCandleFormatter(candle);
 	        }
 	        if(
 	        	parseFloat(candle[1]) > smaLine.mostRecentValue() 
@@ -90,61 +82,63 @@
 	            	const settledLossOrGain = settle(parseFloat(candle[1]), parseFloat(candle[4]), candle)
 	                lastBuyPrice = null;
 	                lastBuyIndex = null;
-	                return highChartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
+	                return chartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
 	            }
 	            lastBuyPrice = parseFloat(candle[1]);
 	            lastBuyIndex = index;
 	            firstOpenedAbove.push(candle);
-	            return highChartCandleFormatter(candle, "buy");
+	            return chartCandleFormatter(candle, "buy");
 	        }
-	        return highChartCandleFormatter(candle);
+	        return chartCandleFormatter(candle);
 	    });
 	    console.log('soldLog ', soldLog)
 	    resultsLog.innerHTML = "<h3>Log:</h3>" + soldLog.map(n => `${new Date(n.candle[0]).toLocaleString()} / <span style="color: ${n.lossOrGain >= 0 ? "green" : "red"}">${n.lossOrGain.toFixed(2)}%</span> / running P&L: ${n.potAtTimeOfSale}`).join('<br>');
 	    resultsOverview.innerHTML = `<h3>gain/loss: ${pot.toFixed(2)}% over ${firstOpenedAbove.length} buys</h3>`;
-	    drawChart(fetchDataHighchartFormat); // this needs to add buy and sell points onto the chart with profit/loss and fees
+	    drawChart(dataInChartFormat, chartMarkers); // this needs to add buy and sell points onto the chart with profit/loss and fees
 	}
 
-	const drawChart = (fetchDataHighchartFormat) => {
-		// FYI https://api.highcharts.com/highstock/series.candlestick.data
-		Highcharts.stockChart("theChart", {
-			rangeSelector: {
-				selected: 1
-			},
-			title: {
-				text: `${userInput_symbol.value.toUpperCase()}`
-			},
-			series: [
-				{
-					type: 'candlestick',
-					id: "penis",
-					data: fetchDataHighchartFormat
-				},
-				{
-					type: 'sma',
-					linkedTo: "penis",
-					params: {
-						period: parseInt(userInput_smaLength.value)
-					},
-					color: "orange",
-					marker: {
-						enabled: false
-					}
-				}
-			],
-			chart: {
-				backgroundColor: "rgba(0,0,0,1)",
-			},
-			yAxis: {
-				gridLineColor: 'rgba(0,255,0,0.5)',
-			},
-			plotOptions: {
-				candlestick: {
-					color: '#ef5351',
-					upColor: '#26a79a'
-				}
-			}
+	const drawChart = (chartData, markers) => {
+		theChart.innerHTML = "";
+		var chart = LightweightCharts.createChart("theChart", {
+		    width: 1400,
+		    height: 700,
+		    layout: {
+		        background: {
+		            type: 'solid',
+		            color: '#000000',
+		        },
+		        textColor: 'rgba(0, 155, 0, 0.75)',
+		    },
+		    grid: {
+		        vertLines: {
+		            color: 'rgba(0, 155, 0, 0.25)',
+		        },
+		        horzLines: {
+		            color: 'rgba(0, 155, 0, 0.25)',
+		        },
+		    },
+		    crosshair: {
+		        mode: LightweightCharts.CrosshairMode.Normal,
+		    },
+		    rightPriceScale: {
+		        borderColor: 'rgba(197, 203, 206, 0.8)',
+		    },
+		    timeScale: {
+		        borderColor: 'rgba(197, 203, 206, 0.8)',
+		    },
 		});
+
+		var candleSeries = chart.addCandlestickSeries({
+			upColor: 'rgba(0, 155, 0, 1)',
+			downColor: 'rgba(155, 0, 0, 1)',
+			borderDownColor: 'rgba(155, 0, 0, 0.5)',
+			borderUpColor: 'rgba(0, 155, 0, 0.5)',
+			wickDownColor: 'rgba(155, 0, 0, 1)',
+			wickUpColor: 'rgba(0, 155, 0, 1)',
+		});
+
+		candleSeries.setData(chartData);
+		candleSeries.setMarkers(markers);
 	}
 
 	const run = async () => {
@@ -201,7 +195,12 @@
 	<li>add time limit for cache</li>
 	<li>Add a stipulation to how far it needs to have dipped below the MA before coming back above?</li>
 	<li>CLEARLY MAKES GOOD MONEY ON POSITIVE CHARTS HUH? MAYBe it's worth having a positive 200MA (or longer) stipulation</li>
-	<li>OMG use trading view's light charts lib (the others are corporate only) see examples <a href="https://www.tradingview.com/lightweight-charts/">here</a> and <a href="https://tradingview.github.io/lightweight-charts/tutorials/how_to/series-markers#resources">here</a>. Omg it's so much better than Highcharts</li>
+	<li>OMG use trading view's light charts lib (the others are corporate only) see examples <a href="https://www.tradingview.com/lightweight-charts/">here</a> and <a href="https://tradingview.github.io/lightweight-charts/tutorials/how_to/series-markers#resources">here</a>. Omg it's so much better than Highcharts. Ho dang volume too?</li>
+	<pre>
+		https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
+		https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
+		fart
+	</pre>
 </ul>
 <hr />
 <h2>Buy Over SMA Line</h2>
