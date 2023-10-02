@@ -14,6 +14,7 @@
 
 	const simulate = (fetchData) => {
 		var smaLine = new MovAvg(parseInt(userInput_smaLength.value));
+		var smaLineSecond = new MovAvg(parseInt(userInput_secondSma.value));
 	    var sellAfter = parseInt(userInput_sellAfter.value); // including the first candle where the guy happened
 	    var fees = parseFloat(userInput_fees.value);
 	    var smaPercentChangeLowerLimit = userInput_smaPercentChangeLowerLimit.value;
@@ -27,6 +28,7 @@
 	    var chartMarkers = [];
 	    var chartVolume = [];
 	    var chartSma = [];
+	    var chartSmaSecond = [];
 
 	    const settle = (buyPrice, sellPrice, candle) => {
 	    	// NOTE: this returns the loss or gain from this one trade, not the running total
@@ -65,10 +67,16 @@
 	    const dataInChartFormat = fetchData.map((candle, index) => {
 
 	        smaLine.addNewPrice(parseFloat(candle[4]));
+	        smaLineSecond.addNewPrice(parseFloat(candle[4]));
 	    	chartVolume.push({time: candle[0]/1000, value: parseFloat(candle[7])});
+	    	
 	    	const smaMostRecentValue = smaLine.mostRecentValue();
 	    	if(smaMostRecentValue) {
 	    		chartSma.push({time: candle[0]/1000, value: smaMostRecentValue});	    		
+	    	}
+	    	const smaSecondMostRecentValue = smaLineSecond.mostRecentValue();
+	    	if(smaSecondMostRecentValue) {
+	    		chartSmaSecond.push({time: candle[0]/1000, value: smaSecondMostRecentValue});	    		
 	    	}
 
 	        if(index === 0) return chartCandleFormatter(candle);
@@ -103,10 +111,11 @@
 	    console.log('soldLog ', soldLog)
 	    resultsLog.innerHTML = "<h3>Log:</h3>" + soldLog.map(n => `${new Date(n.candle[0]).toLocaleString()} / <span style="color: ${n.lossOrGain >= 0 ? "green" : "red"}">${n.lossOrGain.toFixed(2)}%</span> / running P&L: ${n.potAtTimeOfSale}`).join('<br>');
 	    resultsOverview.innerHTML = `<h3>gain/loss: ${pot.toFixed(2)}% over ${firstOpenedAbove.length} buys</h3>`;
-	    drawChart(dataInChartFormat, chartMarkers, chartVolume, chartSma); // this needs to add buy and sell points onto the chart with profit/loss and fees
+	    chartSmaSecond = userInput_secondSmaCheckbox.checked ? chartSmaSecond : null;
+	    drawChart(dataInChartFormat, chartMarkers, chartVolume, chartSma, chartSmaSecond); // this needs to add buy and sell points onto the chart with profit/loss and fees
 	}
 
-	const drawChart = (chartData, markers, volumeData, smaData) => {
+	const drawChart = (chartData, markers, volumeData, smaData, smaSecondData) => {
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
 		theChart.innerHTML = "";
@@ -186,7 +195,19 @@
 		});
 		smaSeries.setData(smaData);
 
-		//chart.timeScale().fitContent();
+		// SMA optional second series
+		if(smaSecondData) {
+			const smaSecondSeries = chart.addLineSeries({
+				color: 'orange',
+				lineWidth: 2,
+				// disabling built-in price lines
+				lastValueVisible: false,
+				priceLineVisible: false,
+			});
+			smaSecondSeries.setData(smaSecondData);
+		}
+
+		chart.timeScale().fitContent();
 	}
 
 	const run = async () => {
@@ -270,6 +291,15 @@
 <br />
 <input id="userInput_averageCandleRange" type="input" value="45" />
 <label>Average candle range</label>
+<br />
+<hr />
+<input id="userInput_secondSmaCheckbox" type="checkbox" onchange="userInput_secondSmaWrap.classList.toggle('hide');"/>
+<label>Draw second SMA</label>
+<br />
+<span class="hide" id="userInput_secondSmaWrap">
+<input id="userInput_secondSma" type="input" value="200" />
+<label>Second SMA length</label>
+</span>
 <br />
 <div id="launchSection">
 	<button onclick="run()">Launch</button>
