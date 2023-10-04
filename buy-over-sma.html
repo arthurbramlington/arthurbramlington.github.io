@@ -66,8 +66,8 @@
 	    }
 	    const dataInChartFormat = fetchData.map((candle, index) => {
 
-	        smaLine.addNewPrice(parseFloat(candle[4]));
-	        smaLineSecond.addNewPrice(parseFloat(candle[4]));
+	        smaLine.addNewPrice(parseFloat(candle[1]));
+	        smaLineSecond.addNewPrice(parseFloat(candle[1]));
 	    	chartVolume.push({time: candle[0]/1000, value: parseFloat(candle[7])});
 	    	
 	    	const smaMostRecentValue = smaLine.mostRecentValue();
