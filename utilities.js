@@ -54,4 +54,107 @@
 	    return percentChangesCombined / candles.length;
 	}
 
+	const drawChart = (chartData, markers, volumeData, smaData, smaSecondData, theChartId = "theChart") => {
+		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
+		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
+		document.querySelector("#" + theChartId).innerHTML = "";
+
+		// chart config
+		var chart = LightweightCharts.createChart(theChartId, {
+		    width: 1400,
+		    height: 700,
+		    layout: {
+		        background: {
+		            type: 'solid',
+		            color: '#000000',
+		        },
+		        textColor: 'rgba(0, 155, 0, 0.75)',
+		    },
+		    grid: {
+		        vertLines: {
+		            color: 'rgba(0, 155, 0, 0.25)',
+		        },
+		        horzLines: {
+		            color: 'rgba(0, 155, 0, 0.25)',
+		        },
+		    },
+		    crosshair: {
+		        mode: LightweightCharts.CrosshairMode.Normal,
+		    },
+		    rightPriceScale: {
+		        borderColor: 'rgba(197, 203, 206, 0.8)',
+		    },
+		    timeScale: {
+		        borderColor: 'rgba(197, 203, 206, 0.8)',
+		        timeVisible: true,
+		    },
+		});
+
+		// condlestick series
+		var candleSeries = chart.addCandlestickSeries({
+			upColor: 'rgba(0, 155, 0, 1)',
+			downColor: 'rgba(155, 0, 0, 1)',
+			borderDownColor: 'rgba(155, 0, 0, 0.5)',
+			borderUpColor: 'rgba(0, 155, 0, 0.5)',
+			wickDownColor: 'rgba(155, 0, 0, 1)',
+			wickUpColor: 'rgba(0, 155, 0, 1)',
+		});
+
+		candleSeries.setData(chartData);
+
+		if(markers){
+			candleSeries.setMarkers(markers);			
+		}
+
+		if(volumeData){
+			// volume series
+			const volumeSeries = chart.addHistogramSeries({
+				color: '#26a69a',
+				priceFormat: {
+					type: 'volume',
+				},
+				priceScaleId: '', // set as an overlay by setting a blank priceScaleId
+				// set the positioning of the volume series
+				scaleMargins: {
+					top: 0.7, // highest point of the series will be 70% away from the top
+					bottom: 0,
+				},
+			});
+			volumeSeries.priceScale().applyOptions({
+				scaleMargins: {
+					top: 0.7, // highest point of the series will be 70% away from the top
+					bottom: 0,
+				},
+			})
+			volumeSeries.setData(volumeData);
+
+		}
+
+		if(smaData) {
+			// SMA series
+			const smaSeries = chart.addLineSeries({
+				color: '#2962FF',
+				lineWidth: 2,
+				// disabling built-in price lines
+				lastValueVisible: false,
+				priceLineVisible: false,
+			});
+			smaSeries.setData(smaData);
+		}
+
+		// SMA optional second series
+		if(smaSecondData) {
+			const smaSecondSeries = chart.addLineSeries({
+				color: 'orange',
+				lineWidth: 2,
+				// disabling built-in price lines
+				lastValueVisible: false,
+				priceLineVisible: false,
+			});
+			smaSecondSeries.setData(smaSecondData);
+		}
+
+		chart.timeScale().fitContent();
+	}
+
 	// U T I L   F U N C S   E N D
