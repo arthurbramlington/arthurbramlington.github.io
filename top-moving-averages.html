@@ -6,6 +6,7 @@
 		<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
 		<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
 		<script src="https://code.highcharts.com/stock/indicators/indicators.js"></script>
+		<script src="libs/lightweight-charts.standalone.production.js"></script>
 		<script src="utilities.js"></script>
 	</head>
 <script>
@@ -31,8 +32,14 @@
 				// run this on the accelerators page with 101 candle count and 1m interval
 				const movingAverageList = values.map((p) => {
 				    const m = new MovAvg(parseInt(movingAverageLength.value));
-				    p.candles.map(c => m.addNewPrice(parseFloat(c[4])));
-				    return {symbol: p.pair.symbol, averagesHistory: m.valueHistory, mostRecentChange: m.mostRecentChange(), fullChartData: p};
+				    const chartMa = [];
+				    const chartVolume = [];
+				    p.candles.map(c => {
+				    	m.addNewPrice(parseFloat(c[4]));
+				    	chartVolume.push({time: c[0]/1000, value: parseInt(c[7])});
+				    	chartMa.push({time: c[0]/1000, value: m.mostRecentValue()[0]});
+				    });
+				    return {symbol: p.pair.symbol, averagesHistory: m.valueHistory, mostRecentChange: m.mostRecentChange(), fullChartData: p, chartMa, chartVolume};
 				});
 				const resultsSortedByMovingAverage = sortDescending.checked ? movingAverageList.sort((a, b) => a.mostRecentChange - b.mostRecentChange) : movingAverageList.sort((a, b) => b.mostRecentChange - a.mostRecentChange);
 				console.log("H I G H E S T   M O V I N G   A V E R A G E S :   ", resultsSortedByMovingAverage)
@@ -43,48 +50,21 @@
 			    
 			    resultsSortedByMovingAverage.map((n, i) => {
 			    	if(i < parseInt(showTheTop.value)) {
-				    	chartContainer = document.createElement('li');
+				    	const liElement = document.createElement('li');
+				    	const chartContainer = document.createElement('div');
 						chartContainer.setAttribute("id", n.symbol);
-						chartContainer.setAttribute("class", "with-chart");
-				    	topMovers.appendChild(chartContainer);
-			    	    Highcharts.stockChart(n.symbol, {
-					        rangeSelector: {
-					            selected: 1
-					        },
-
-					        title: {
-					            text: `${n.symbol} (${n.mostRecentChange.toFixed(2)}) ${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
-					        },
-					        series: [{
-					            type: 'candlestick',
-					            name: 'P E N I S',
-					            id: "penis",
-					            data: n.fullChartData.candles.map(candle => candle.map(candleValue => parseFloat(candleValue)).slice(0, 5)),
-					        },
-					        {
-						      type: 'sma',
-						      linkedTo: "penis",
-						      params: {
-						        period: parseInt(movingAverageLength.value)
-						      },
-						      color: "orange",
-				            	marker: {
-						        enabled: false
-						      }
-						    }],
-					        chart: {
-						    	backgroundColor: "rgba(0,0,0,1)",
-						    },
-						     yAxis: {
-						      gridLineColor: 'rgba(0,255,0,0.5)',
-						    },
-					plotOptions: {
-						candlestick: {
-							color: '#ef5351',
-							upColor: '#26a79a'
-						}
-					}
-					    });
+				    	liElement.innerHTML = `<h3>${n.symbol} (${n.mostRecentChange.toFixed(2)}) ${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}</h3>`;
+				    	liElement.append(chartContainer);
+						//chartContainer.setAttribute("class", "with-chart");
+				    	topMovers.appendChild(liElement);
+				    	drawChart(
+				    		n.fullChartData.candles.map(candle => ({time: candle[0]/1000, open: parseFloat(candle[1]), high: parseFloat(candle[2]), low: parseFloat(candle[3]), close: parseFloat(candle[4])})),
+				    		null, 
+				    		n.chartVolume, 
+				    		n.chartMa, 
+				    		null, 
+				    		n.symbol
+				    	);
 			    	}else {
 			    		chartContainer = document.createElement('li');
 			    		chartContainer.innerHTML = `${i + 1}: ${n.symbol} ${n.mostRecentChange}${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
