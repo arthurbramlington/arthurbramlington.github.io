@@ -90,8 +90,20 @@
 	            return chartCandleFormatter(candle);
 	        }
 	        if(
-	        	parseFloat(candle[1]) > smaLine.mostRecentValue() 
-	        	&& parseFloat(fetchData[index - 1][1]) <= smaLine.mostRecentValue() 
+	        	(
+	        		(
+			        	( !userInput_useFirstBelow.checked && parseFloat(candle[1]) > smaLine.mostRecentValue() )
+			        	&&
+			        	( !userInput_useFirstBelow.checked && parseFloat(fetchData[index - 1][1]) <= smaLine.mostRecentValue() )
+	        		)
+			        ||
+			        (
+			        	( userInput_useFirstBelow.checked && parseFloat(candle[1]) < smaLine.mostRecentValue() )
+			        	&&
+			        	( userInput_useFirstBelow.checked && parseFloat(fetchData[index - 1][1]) >= smaLine.mostRecentValue() )
+	        		)
+
+	        	)
 	        	&& smaLine.mostRecentChange() > smaPercentChangeLowerLimit
 	        	&& averageCandleSize(fetchData.slice(index - averageCandleRange, index)) >= averageCandleSizeMinimum
 	        ){
@@ -201,6 +213,9 @@
 <input id="userInput_averageCandleRange" type="input" value="45" />
 <label>Average candle range</label>
 <br />
+<hr />
+<input id="userInput_useFirstBelow" type="checkbox" />
+<label>Use first candle below SMA instead?</label>
 <hr />
 <input id="userInput_secondSmaCheckbox" type="checkbox" onchange="userInput_secondSmaWrap.classList.toggle('hide');"/>
 <label>Draw second SMA</label>
