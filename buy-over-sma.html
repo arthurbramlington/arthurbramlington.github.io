@@ -24,6 +24,8 @@
 	    var firstOpenedAbove = [];
 	    var soldLog = [];
 	    var lastBuyPrice = null;
+	    var lastBuyTakeProfit = null;
+		var lastBuyAcceptLoss = null;
 	    var lastBuyIndex = null;
 	    var chartMarkers = [];
 	    var chartVolume = [];
@@ -81,12 +83,38 @@
 
 	        if(index === 0) return chartCandleFormatter(candle);
 	        if(lastBuyPrice) {
-	            if (index === lastBuyIndex + sellAfter) {
-	            	const settledLossOrGain = settle(lastBuyPrice, parseFloat(candle[4]), candle);
-	                lastBuyPrice = null;
-	                lastBuyIndex = null;
-	                return chartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
-	            };
+	        	if(userInput_profitLossCheckbox.checked) {
+	        		// decide wether to sell or not - ay shit, this isn't going to be so cut and dried in 
+	        		// the case of a range that covers the positive and negative sell points, I'll need 
+	        		// another checkbox for the user to assume negitivity or not.
+	        		if(candle[2] > lastBuyTakeProfit && candle[3] < lastBuyAcceptLoss) {
+	        			console.log('FULL RANGE REACHED SHITTTTTTTTT');
+	        			return chartCandleFormatter(candle);
+	        		}
+	        		if(candle[2] > lastBuyTakeProfit) {
+	        			const settledLossOrGain = settle(lastBuyPrice, lastBuyTakeProfit, candle);
+		                lastBuyPrice = null;
+		                lastBuyIndex = null;
+		                lastBuyTakeProfit = null;
+	        			lastBuyAcceptLoss = null;
+		                return chartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
+	        		}
+	        		if(candle[2] < lastBuyAcceptLoss) {
+	        			const settledLossOrGain = settle(lastBuyPrice, lastBuyAcceptLoss, candle);
+		                lastBuyPrice = null;
+		                lastBuyIndex = null;
+		                lastBuyTakeProfit = null;
+	        			lastBuyAcceptLoss = null;
+		                return chartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
+	        		}
+	        	}else {
+	        		if (index === lastBuyIndex + sellAfter) {
+		            	const settledLossOrGain = settle(lastBuyPrice, parseFloat(candle[4]), candle);
+		                lastBuyPrice = null;
+		                lastBuyIndex = null;
+		                return chartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
+		            };
+	        	}
 	            return chartCandleFormatter(candle);
 	        }
 	        if(
@@ -107,13 +135,18 @@
 	        	&& smaLine.mostRecentChange() > smaPercentChangeLowerLimit
 	        	&& averageCandleSize(fetchData.slice(index - averageCandleRange, index)) >= averageCandleSizeMinimum
 	        ){
-	            if(sellAfter === 0) {
+	            if(!userInput_profitLossCheckbox.checked && sellAfter === 0) {
 	            	const settledLossOrGain = settle(parseFloat(candle[1]), parseFloat(candle[4]), candle)
 	                lastBuyPrice = null;
 	                lastBuyIndex = null;
 	                return chartCandleFormatter(candle, "sell", settledLossOrGain.toFixed(2));
 	            }
 	            lastBuyPrice = parseFloat(candle[1]);
+	            if(userInput_profitLossCheckbox.checked){
+		            const currentAverageCandleSize = averageCandleSize(fetchData.slice(index - averageCandleRange, index));
+	            	lastBuyTakeProfit = changeByXPercent(lastBuyPrice, (currentAverageCandleSize * parseFloat(userInput_profitLossPositive.value)));
+	            	lastBuyAcceptLoss = changeByXPercent(lastBuyPrice, (currentAverageCandleSize * parseFloat(userInput_profitLossNegative.value)));
+	            }
 	            lastBuyIndex = index;
 	            firstOpenedAbove.push(candle);
 	            return chartCandleFormatter(candle, "buy");
@@ -166,7 +199,9 @@
 </nav>
 <h1>Buy Over SMA Line</h1>
 
+
 <hr />
+
 <strong>To-do</strong>
 <ul>
 	<li>Try/catch error logging for user too and exit run() func</li>
@@ -188,8 +223,10 @@
 	<l1>have better sell conditions rather than after-x-candles, possibly a limit/stop-loss</l1>
 	<l1>allow user to buy after x candles over the SMA</l1>
 </ul>
+
 <hr />
-<h2>Buy Over SMA Line</h2>
+
+<h2>Pair and platform settings</h2>
 <input id="userInput_symbol" type="input" value="BTCUSDT" />
 <label>Symbol</label>
 <br />
@@ -199,32 +236,56 @@
 <input id="userInput_fees" type="input" value="0.2" />
 <label>Trading fees</label>
 <br />
+
+<hr />
+
+<h2>Buy conditions</h2>
 <input id="userInput_smaLength" type="number" value="50" />
 <label>SMA length</label>
 <br />
 <input id="userInput_smaPercentChangeLowerLimit" type="number" value="0.03" />
 <label>SMA percent change lower limit (0 is a flat line)</label>
 <br />
-<input id="userInput_sellAfter" type="input" value="3" />
-<label>candles to sell after</label>
-<br />
-<hr />
 <input id="userInput_averageCandleSizeMinimum" type="input" value="0.2" />
 <label>Only buy when average candle size is >= (%)</label>
 <br />
 <input id="userInput_averageCandleRange" type="input" value="45" />
-<label>Average candle range</label>
+<label>Range for average candle size</label>
 <br />
+
 <hr />
+
+<h2>Sell conditions</h2>
+<input id="userInput_profitLossCheckbox" type="checkbox" onchange="userInput_profitLossWrap.classList.toggle('hide');userInput_sellAfterWrap.classList.toggle('hide');"/>
+<label>Use specific profit/loss?</label>
+<br />
+<span class="hide" id="userInput_profitLossWrap">
+	<input id="userInput_profitLossPositive" type="input" value="2" />
+	<label>How many times the average candle to take profit</label>
+	<br />
+	<input id="userInput_profitLossNegative" type="input" value="-2" />
+	<label>How many times the average candle to accept loss</label>
+	<br />
+</span>
+<span id="userInput_sellAfterWrap">
+	<input id="userInput_sellAfter" type="input" value="3" />
+	<label>candles to sell after</label>
+</span>
+<br />
+
+<hr />
+
 <input id="userInput_useFirstBelow" type="checkbox" />
 <label>Use first candle below SMA instead?</label>
+
 <hr />
+
 <input id="userInput_secondSmaCheckbox" type="checkbox" onchange="userInput_secondSmaWrap.classList.toggle('hide');"/>
 <label>Draw second SMA</label>
 <br />
 <span class="hide" id="userInput_secondSmaWrap">
-<input id="userInput_secondSma" type="input" value="200" />
-<label>Second SMA length</label>
+	<input id="userInput_secondSma" type="input" value="200" />
+	<label>Second SMA length</label>
 </span>
 <br />
 <div id="launchSection">
