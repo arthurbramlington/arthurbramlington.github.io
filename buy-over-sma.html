@@ -136,6 +136,7 @@
 	        	&& smaLine.mostRecentChange() > smaPercentChangeLowerLimit
 	        	&& averageCandleSize(fetchData.slice(index - averageCandleRange, index)) >= averageCandleSizeMinimum
 	        ){
+	        	const currentAverageCandleSize = averageCandleSize(fetchData.slice(index - averageCandleRange, index));
 	            if(!userInput_profitLossCheckbox.checked && sellAfter === 0) {
 	            	const settledLossOrGain = settle(parseFloat(candle[1]), parseFloat(candle[4]), candle)
 	                lastBuyPrice = null;
@@ -144,13 +145,12 @@
 	            }
 	            lastBuyPrice = parseFloat(candle[1]);
 	            if(userInput_profitLossCheckbox.checked){
-		            const currentAverageCandleSize = averageCandleSize(fetchData.slice(index - averageCandleRange, index));
 	            	lastBuyTakeProfit = changeByXPercent(lastBuyPrice, (currentAverageCandleSize * parseFloat(userInput_profitLossPositive.value)));
 	            	lastBuyAcceptLoss = changeByXPercent(lastBuyPrice, (currentAverageCandleSize * parseFloat(userInput_profitLossNegative.value)));
 	            }
 	            lastBuyIndex = index;
 	            firstOpenedAbove.push(candle);
-	            return chartCandleFormatter(candle, "buy");
+	            return chartCandleFormatter(candle, "buy", `avg cndl: ${currentAverageCandleSize.toFixed(2)}`);
 	        }
 	        return chartCandleFormatter(candle);
 	    });
@@ -223,6 +223,7 @@
 	<li>///////MAJOR//////// the SMA line is being updated from candle close data which wouldn't be available at candle open</li>
 	<l1>have better sell conditions rather than after-x-candles, possibly a limit/stop-loss</l1>
 	<l1>allow user to buy after x candles over the SMA</l1>
+	<l1>what if you could say "if x candels have elapsed and it breaks even - sell" would this save some bad situations?</l1>
 </ul>
 
 <hr />
