@@ -8,6 +8,7 @@
 <script>
 	// W I N D O W  V A R S
 	window.fetchList = {};
+	window.addEventListener('keypress', (e) => {if(e.key === 'Enter') run()});
 	// W I N D O W  V A R S  E N D
 
 	const popupToggle = () => popup.classList.toggle('hide');
