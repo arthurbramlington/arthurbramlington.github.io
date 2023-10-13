@@ -18,7 +18,7 @@
 		var smaLineSecond = new MovAvg(parseInt(userInput_secondSma.value));
 	    var sellAfter = parseInt(userInput_sellAfter.value); // including the first candle where the guy happened
 	    var fees = parseFloat(userInput_fees.value);
-	    var smaPercentChangeLowerLimit = userInput_smaPercentChangeLowerLimit.value;
+	    var smaPercentChangeLowerLimit = parseFloat(userInput_smaPercentChangeLowerLimit.value);
 	    var averageCandleSizeMinimum = parseFloat(userInput_averageCandleSizeMinimum.value);
 	    var averageCandleRange = parseInt(userInput_averageCandleRange.value);
 	    var pot = 0;
@@ -133,7 +133,11 @@
 	        		)
 
 	        	)
-	        	&& smaLine.mostRecentChange() > smaPercentChangeLowerLimit
+	        	&& (
+	        		!userInput_invertBuyOverCheckbox.checked && smaLine.mostRecentChange() > smaPercentChangeLowerLimit
+	        		||
+	        		userInput_invertBuyOverCheckbox.checked && smaLine.mostRecentChange() < smaPercentChangeLowerLimit
+	        		)
 	        	&& averageCandleSize(fetchData.slice(index - averageCandleRange, index)) >= averageCandleSizeMinimum
 	        ){
 	        	const currentAverageCandleSize = averageCandleSize(fetchData.slice(index - averageCandleRange, index));
@@ -246,7 +250,9 @@
 <label>SMA length</label>
 <br />
 <input id="userInput_smaPercentChangeLowerLimit" type="number" value="0.03" />
-<label>SMA percent change lower limit (0 is a flat line)</label>
+<label>SMA percent change <label for="userInput_invertBuyOverCheckbox" id="userInput_invertBuyOverCheckboxLabel"><u>above</u></label> lower limit (0 is a flat line)</label>
+<input id="userInput_invertBuyOverCheckbox" class="hide" type="checkbox" onchange="this.checked ? userInput_invertBuyOverCheckboxLabel.innerHTML = '<u>below</u>' : userInput_invertBuyOverCheckboxLabel.innerHTML = '<u>above</u>'"/>
+<br />
 <br />
 <input id="userInput_averageCandleSizeMinimum" type="input" value="0.2" />
 <label>Only buy when average candle size is >= (%)</label>
