@@ -53,7 +53,7 @@
 				    	const liElement = document.createElement('li');
 				    	const chartContainer = document.createElement('div');
 						chartContainer.setAttribute("id", n.symbol);
-				    	liElement.innerHTML = `<h3>${n.symbol} (${n.mostRecentChange.toFixed(4)}) ${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}</h3>`;
+				    	liElement.innerHTML = `<h3>${n.symbol} (${n.mostRecentChange.toFixed(6)}) ${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}</h3>`;
 				    	liElement.append(chartContainer);
 						//chartContainer.setAttribute("class", "with-chart");
 				    	topMovers.appendChild(liElement);
@@ -67,7 +67,7 @@
 				    	);
 			    	}else {
 			    		chartContainer = document.createElement('li');
-			    		chartContainer.innerHTML = `${i + 1}: ${n.symbol} ${n.mostRecentChange.toFixed(4)}${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
+			    		chartContainer.innerHTML = `${i + 1}: ${n.symbol} ${n.mostRecentChange.toFixed(6)}${n.fullChartData.pair.isMarginTradingAllowed ? " - M" : ""}`
 				    	topMovers.appendChild(chartContainer);
 			    	}
 				}).join('');
