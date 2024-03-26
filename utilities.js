@@ -54,7 +54,7 @@
 	    return percentChangesCombined / candles.length;
 	}
 
-	const drawChart = (chartData, markers, volumeData, smaData, smaSecondData, theChartId = "theChart") => {
+	const drawChart = (chartData, markers, volumeData, smaData, smaSecondData, theChartId = "theChart", baselineData) => { // this needs to accept an object
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
 		document.querySelector("#" + theChartId).innerHTML = "";
@@ -130,6 +130,20 @@
 			})
 			volumeSeries.setData(volumeData);
 
+		}
+
+		if(baselineData) {
+			// SMA series
+			const baselineSeries = chart.addBaselineSeries({
+				baseValue: { type: 'price', price: 25 }, 
+				topLineColor: 'rgba( 38, 166, 154, 1)', 
+				topFillColor1: 'rgba( 38, 166, 154, 0.28)', 
+				topFillColor2: 'rgba( 38, 166, 154, 0.05)', 
+				bottomLineColor: 'rgba( 239, 83, 80, 1)', 
+				bottomFillColor1: 'rgba( 239, 83, 80, 0.05)', 
+				bottomFillColor2: 'rgba( 239, 83, 80, 0.28)'
+			});
+			baselineSeries.setData(baselineData);
 		}
 
 		if(smaData) {
