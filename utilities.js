@@ -135,7 +135,7 @@
 		if(baselineData) {
 			// SMA series
 			const baselineSeries = chart.addBaselineSeries({
-				baseValue: { type: 'price', price: 25 }, 
+				baseValue: { type: 'price', price: 0 }, 
 				topLineColor: 'rgba( 38, 166, 154, 1)', 
 				topFillColor1: 'rgba( 38, 166, 154, 0.28)', 
 				topFillColor2: 'rgba( 38, 166, 154, 0.05)', 
