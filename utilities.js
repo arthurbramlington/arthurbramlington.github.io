@@ -90,20 +90,22 @@
 		    },
 		});
 
-		// condlestick series
-		var candleSeries = chart.addCandlestickSeries({
-			upColor: 'rgba(0, 155, 0, 1)',
-			downColor: 'rgba(155, 0, 0, 1)',
-			borderDownColor: 'rgba(155, 0, 0, 0.5)',
-			borderUpColor: 'rgba(0, 155, 0, 0.5)',
-			wickDownColor: 'rgba(155, 0, 0, 1)',
-			wickUpColor: 'rgba(0, 155, 0, 1)',
-		});
-
-		candleSeries.setData(chartData);
-
-		if(markers){
-			candleSeries.setMarkers(markers);			
+		if(chartData) {
+			// condlestick series
+			var candleSeries = chart.addCandlestickSeries({
+				upColor: 'rgba(0, 155, 0, 1)',
+				downColor: 'rgba(155, 0, 0, 1)',
+				borderDownColor: 'rgba(155, 0, 0, 0.5)',
+				borderUpColor: 'rgba(0, 155, 0, 0.5)',
+				wickDownColor: 'rgba(155, 0, 0, 1)',
+				wickUpColor: 'rgba(0, 155, 0, 1)',
+			});
+	
+			candleSeries.setData(chartData);
+	
+			if(markers){
+				candleSeries.setMarkers(markers);			
+			}
 		}
 
 		if(volumeData){
