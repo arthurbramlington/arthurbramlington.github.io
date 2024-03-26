@@ -61,8 +61,8 @@
 
 		// chart config
 		var chart = LightweightCharts.createChart(theChartId, {
-		    width: 1400,
-		    height: 700,
+		    width: window.innerWidth,
+		    height: window.innerWidth/2,
 		    layout: {
 		        background: {
 		            type: 'solid',
