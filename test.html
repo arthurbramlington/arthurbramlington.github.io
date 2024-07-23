@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <script src="libs/lightweight-charts.standalone.production.js"></script>
+		<script src="utilities.js"></script>
+  </head>
+  <body>
+    <h1>testm8lolbrb</h1>
+    <script>
+      var getPlate = (term) => { fetch(`https://dvlaregistrations.dvla.gov.uk/search/results.html?search=${term}&action=results&pricefrom=0&priceto=&prefixmatches=&currentmatches=&limitprefix=&limitcurrent=&limitauction=&searched=true&openoption=yes&language=en&super=SEARCH&super_pricefrom=0&super_priceto=`).then(async res => {
+              console.log('yoohooooooo');
+              const htmlString = await res.text();
+              var parser = new DOMParser();
+              var doc = parser.parseFromString(htmlString, "text/html");
+              const regArray = [...doc.querySelectorAll('.resultsstripplate.plate')].map(n => n.innerText.trim());
+              console.log(regArray);
+          })
+      }
+      getPlate('LLLL');
+    </script>
+  </body>
+</html>
