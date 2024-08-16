@@ -173,4 +173,17 @@
 		chart.timeScale().fitContent();
 	}
 
+	const alphaVantageToBinanceFormat = (data) => {
+		// https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=LRHC&outputsize=full&apikey=ZNKBEV2HB5YZDXH4
+		// note, this excludes weekends
+		const ts = data['Time Series (Daily)'];
+		return Object.keys(ts).map(key => ([
+			new Date(key).getTime(),
+			ts[key]['1. open'],
+			ts[key]['2. high'],
+			ts[key]['3. low'],
+			ts[key]['4. close']
+		]));
+	}
+
 	// U T I L   F U N C S   E N D
