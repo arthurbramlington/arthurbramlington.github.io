@@ -183,7 +183,7 @@
 			ts[key]['2. high'],
 			ts[key]['3. low'],
 			ts[key]['4. close']
-		]));
+		])).reverse();
 	}
 
 	// U T I L   F U N C S   E N D
