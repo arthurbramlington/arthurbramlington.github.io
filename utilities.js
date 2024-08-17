@@ -186,4 +186,11 @@
 		])).reverse();
 	}
 
+	const polygonToBinanceFormat = (data) => {
+		// https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/2023-01-09/2024-01-09?apiKey=rW3cNcDE0G0ZrnmAqTs1yUeNLEX6_PQG
+		// https://polygon.io/docs/stocks/get_v2_aggs_ticker__stocksticker__range__multiplier___timespan___from___to
+		// note that the response is "adjused for splits", I'm not sure if that's important to me
+		return data.results.map(n => [n.t, n.o, n.h, n.l, n.c]);
+	}
+
 	// U T I L   F U N C S   E N D
