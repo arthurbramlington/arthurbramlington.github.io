@@ -149,6 +149,7 @@
 
 		if(smaData) {
 			// SMA series
+			const smaDataNoNull = smaData.filter(n => n.value)
 			const smaSeries = chart.addLineSeries({
 				color: '#2962FF',
 				lineWidth: 2,
@@ -156,11 +157,12 @@
 				lastValueVisible: false,
 				priceLineVisible: false,
 			});
-			smaSeries.setData(smaData);
+			smaSeries.setData(smaDataNoNull);
 		}
 
 		// SMA optional second series
 		if(smaSecondData) {
+			const smaDataNoNull = smaData.filter(n => n.value)
 			const smaSecondSeries = chart.addLineSeries({
 				color: 'orange',
 				lineWidth: 2,
@@ -168,7 +170,7 @@
 				lastValueVisible: false,
 				priceLineVisible: false,
 			});
-			smaSecondSeries.setData(smaSecondData);
+			smaSecondSeries.setData(smaDataNoNull);
 		}
 
 		chart.timeScale().fitContent();
