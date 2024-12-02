@@ -30,7 +30,8 @@
 
 	    mostRecentValue(num = 1) {
 	        if (num > this.valueHistory.length) {
-	            return this.valueHistory;
+				// Return a copy instead of a reference
+				return this.valueHistory.slice();
 	        }
 	        const lastIndex = this.valueHistory.length;
 	        return this.valueHistory.slice(lastIndex - num, lastIndex);
