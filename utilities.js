@@ -55,7 +55,7 @@
 	    return percentChangesCombined / candles.length;
 	}
 
-	const drawChart = (chartData, markers, volumeData, smaData, smaSecondData, theChartId = "theChart", baselineData) => { // this needs to accept an object
+	var drawChart = (chartData, markers, volumeData, smaData, smaSecondData, theChartId = "theChart", baselineData) => { // this needs to accept an object
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
 		document.querySelector("#" + theChartId).innerHTML = "";
@@ -63,7 +63,7 @@
 		// chart config
 		var chart = LightweightCharts.createChart(theChartId, {
 		    width: (window.innerWidth * 0.5),
-		    height: (window.innerWidth * 0.5)/2,
+		    height: (window.innerWidth * 0.5)/2, //... so a quater then? Hhahaha
 		    layout: {
 		        background: {
 		            type: 'solid',
