@@ -58,9 +58,10 @@
 	var drawChart = (chartData, markers, volumeData, smaData, smaSecondData, theChartId = "theChart", baselineData) => { // this needs to accept an object
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/ISeriesApi
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
-		document.querySelector("#" + theChartId).innerHTML = "";
+		const el = document.querySelector("#" + theChartId);
+		el.innerHTML = "";
 
-        const parentWidth = chartWrap_FTTUSDT.parentElement.getBoundingClientRect().width || window.innerWidth * 0.75;
+        const parentWidth = el.parentElement.getBoundingClientRect().width || window.innerWidth * 0.75;
 
 		// chart config
 		var chart = LightweightCharts.createChart(theChartId, {
