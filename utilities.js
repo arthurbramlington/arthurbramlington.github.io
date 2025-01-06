@@ -60,10 +60,12 @@
 		//https://tradingview.github.io/lightweight-charts/docs/api/interfaces/CandlestickData
 		document.querySelector("#" + theChartId).innerHTML = "";
 
+        const parentWidth = chartWrap_FTTUSDT.parentElement.getBoundingClientRect().width || window.innerWidth * 0.75;
+
 		// chart config
 		var chart = LightweightCharts.createChart(theChartId, {
-		    width: (window.innerWidth * 0.5),
-		    height: (window.innerWidth * 0.5)/2, //... so a quater then? Hhahaha
+		    width: parentWidth,
+		    height: parentWidth/2,
 		    layout: {
 		        background: {
 		            type: 'solid',
