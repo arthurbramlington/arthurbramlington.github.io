@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>180 Day Selector</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        .container {
+            max-width: 100%;
+        }
+
+        h1 {
+            margin: 0 0 25px;
+            font-size: 24px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls label {
+            font-weight: 600;
+        }
+
+        .controls input {
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        .controls button {
+            padding: 9px 16px;
+            border: 0;
+            border-radius: 5px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .controls button:hover {
+            background: #444;
+        }
+
+        /*
+         * The selector is intentionally horizontally scrollable.
+         * Each day has a fixed width so the dates remain easy to click.
+         */
+        .selector-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .days {
+            display: flex;
+            width: max-content;
+            padding: 15px;
+            gap: 5px;
+        }
+
+        .day {
+            width: 58px;
+            min-width: 58px;
+            height: 75px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            background: #fafafa;
+            transition: background 0.1s, border-color 0.1s;
+        }
+
+        .day:hover {
+            border-color: #888;
+            background: #eee;
+        }
+
+        .day .weekday {
+            font-size: 11px;
+            color: #777;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .day .date {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .day .year {
+            font-size: 10px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .day.selected {
+            background: #222;
+            color: white;
+            border-color: #222;
+        }
+
+        .day.selected .weekday,
+        .day.selected .year {
+            color: #ccc;
+        }
+
+        .day.today {
+            outline: 2px solid #4a90e2;
+            outline-offset: -2px;
+        }
+
+        .summary {
+            margin-top: 20px;
+            padding: 18px 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .summary .count {
+            font-size: 28px;
+            margin-right: 5px;
+        }
+
+        .summary.over-limit {
+            color: #d00000;
+            border-color: #d00000;
+            background: #fff5f5;
+        }
+
+        .range-info {
+            margin-top: 8px;
+            color: #777;
+            font-size: 13px;
+            font-weight: normal;
+        }
+
+        .help {
+            margin-top: 12px;
+            color: #666;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>180 Day Selector</h1>
+
+    <div class="controls">
+        <label for="endDate">Range ends on:</label>
+
+        <input
+            type="date"
+            id="endDate"
+        >
+
+        <button id="setEndDate">
+            Set Range
+        </button>
+    </div>
+
+    <div class="selector-wrapper">
+        <div id="days" class="days"></div>
+    </div>
+
+    <div id="summary" class="summary">
+        <span class="count" id="selectedCount">0</span>
+        selected days
+        <div class="range-info" id="rangeInfo"></div>
+    </div>
+
+    <div class="help">
+        Click individual dates to select them. Hold <strong>Shift</strong> while
+        clicking to select a range.
+    </div>
+
+</div>
+
+
+<script>
+(function () {
+
+    const RANGE_LENGTH = 180;
+
+    const daysContainer = document.getElementById('days');
+    const endDateInput = document.getElementById('endDate');
+    const setEndDateButton = document.getElementById('setEndDate');
+    const selectedCountElement = document.getElementById('selectedCount');
+    const summaryElement = document.getElementById('summary');
+    const rangeInfoElement = document.getElementById('rangeInfo');
+
+    const STORAGE_KEY = 'dateSelectorSelectedDates';
+    const END_DATE_STORAGE_KEY = 'dateSelectorEndDate';
+
+    /*
+     * Dates are stored as YYYY-MM-DD strings.
+     * This avoids timezone problems caused by new Date("YYYY-MM-DD").
+     */
+
+    function pad(number) {
+        return String(number).padStart(2, '0');
+    }
+
+    function dateToString(date) {
+        return (
+            date.getFullYear() +
+            '-' +
+            pad(date.getMonth() + 1) +
+            '-' +
+            pad(date.getDate())
+        );
+    }
+
+    function stringToDate(dateString) {
+        const [year, month, day] = dateString.split('-').map(Number);
+
+        return new Date(
+            year,
+            month - 1,
+            day
+        );
+    }
+
+    function addDays(date, amount) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + amount);
+        return result;
+    }
+
+    function getToday() {
+        const now = new Date();
+
+        return new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+        );
+    }
+
+    /*
+     * Load selected dates from localStorage.
+     */
+    function loadSelectedDates() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+
+            if (!stored) {
+                return new Set();
+            }
+
+            const parsed = JSON.parse(stored);
+
+            if (!Array.isArray(parsed)) {
+                return new Set();
+            }
+
+            return new Set(parsed);
+
+        } catch (error) {
+            console.error('Could not load selected dates:', error);
+            return new Set();
+        }
+    }
+
+    let selectedDates = loadSelectedDates();
+
+    /*
+     * The last clicked date is used as the starting point
+     * when Shift is held to select a range.
+     */
+    let lastClickedDate = null;
+
+
+    function saveSelectedDates() {
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify([...selectedDates].sort())
+        );
+
+        updateUrl();
+    }
+
+
+    /*
+     * URL format:
+     *
+     * ?end=2026-08-21&selected=2026-03-01,2026-03-05,2026-03-06
+     *
+     * The end date is included as well so the URL completely
+     * describes the current state.
+     */
+    function updateUrl() {
+        const url = new URL(window.location.href);
+
+        url.searchParams.set('end', dateToString(currentEndDate));
+
+        if (selectedDates.size > 0) {
+            url.searchParams.set(
+                'selected',
+                [...selectedDates].sort().join(',')
+            );
+        } else {
+            url.searchParams.delete('selected');
+        }
+
+        window.history.replaceState(
+            {},
+            '',
+            url.pathname + url.search + url.hash
+        );
+    }
+
+
+    /*
+     * Load state from URL first.
+     * If the URL doesn't contain something, fall back to localStorage.
+     */
+    function loadState() {
+
+        const url = new URL(window.location.href);
+
+        const urlEnd = url.searchParams.get('end');
+
+        if (urlEnd && /^\d{4}-\d{2}-\d{2}$/.test(urlEnd)) {
+            currentEndDate = stringToDate(urlEnd);
+        } else {
+            const storedEnd = localStorage.getItem(END_DATE_STORAGE_KEY);
+
+            if (
+                storedEnd &&
+                /^\d{4}-\d{2}-\d{2}$/.test(storedEnd)
+            ) {
+                currentEndDate = stringToDate(storedEnd);
+            } else {
+                currentEndDate = getToday();
+            }
+        }
+
+
+        const urlSelected = url.searchParams.get('selected');
+
+        if (urlSelected !== null) {
+
+            const dates = urlSelected
+                .split(',')
+                .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date));
+
+            selectedDates = new Set(dates);
+
+            /*
+             * Keep localStorage in sync with the URL.
+             */
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify([...selectedDates].sort())
+            );
+        }
+
+        endDateInput.value = dateToString(currentEndDate);
+    }
+
+
+    let currentEndDate;
+
+
+    function render() {
+
+        daysContainer.innerHTML = '';
+
+        const startDate = addDays(
+            currentEndDate,
+            -(RANGE_LENGTH - 1)
+        );
+
+        for (let i = 0; i < RANGE_LENGTH; i++) {
+
+            const date = addDays(startDate, i);
+            const dateString = dateToString(date);
+
+            const dayElement = document.createElement('div');
+
+            dayElement.className = 'day';
+
+            if (selectedDates.has(dateString)) {
+                dayElement.classList.add('selected');
+            }
+
+            if (dateString === dateToString(getToday())) {
+                dayElement.classList.add('today');
+            }
+
+            const weekday = document.createElement('div');
+            weekday.className = 'weekday';
+
+            weekday.textContent = date.toLocaleDateString(
+                undefined,
+                { weekday: 'short' }
+            );
+
+            const dateNumber = document.createElement('div');
+            dateNumber.className = 'date';
+
+            dateNumber.textContent =
+                date.getDate() + '/' + (date.getMonth() + 1);
+
+            const year = document.createElement('div');
+            year.className = 'year';
+
+            year.textContent = date.getFullYear();
+
+            dayElement.appendChild(weekday);
+            dayElement.appendChild(dateNumber);
+            dayElement.appendChild(year);
+
+            dayElement.addEventListener('click', function (event) {
+
+                /*
+                 * SHIFT + CLICK
+                 *
+                 * Select every date between the previous clicked
+                 * date and this date.
+                 */
+                if (event.shiftKey && lastClickedDate !== null) {
+
+                    const clickedDate = stringToDate(dateString);
+
+                    let rangeStart = lastClickedDate < clickedDate
+                        ? lastClickedDate
+                        : clickedDate;
+
+                    let rangeEnd = lastClickedDate < clickedDate
+                        ? clickedDate
+                        : lastClickedDate;
+
+                    let current = new Date(rangeStart);
+
+                    while (current <= rangeEnd) {
+
+                        selectedDates.add(
+                            dateToString(current)
+                        );
+
+                        current = addDays(current, 1);
+                    }
+
+                } else {
+
+                    /*
+                     * Normal click toggles the individual date.
+                     */
+                    if (selectedDates.has(dateString)) {
+                        selectedDates.delete(dateString);
+                    } else {
+                        selectedDates.add(dateString);
+                    }
+                }
+
+                lastClickedDate = stringToDate(dateString);
+
+                saveSelectedDates();
+                render();
+            });
+
+            daysContainer.appendChild(dayElement);
+        }
+
+        updateSummary();
+    }
+
+
+    function updateSummary() {
+
+        const startDate = addDays(
+            currentEndDate,
+            -(RANGE_LENGTH - 1)
+        );
+
+        const startString = dateToString(startDate);
+        const endString = dateToString(currentEndDate);
+
+        /*
+         * Only count selections that fall within the current
+         * 180-day range.
+         */
+        let count = 0;
+
+        selectedDates.forEach(function (dateString) {
+
+            if (
+                dateString >= startString &&
+                dateString <= endString
+            ) {
+                count++;
+            }
+        });
+
+        selectedCountElement.textContent = count;
+
+        if (count > 90) {
+            summaryElement.classList.add('over-limit');
+        } else {
+            summaryElement.classList.remove('over-limit');
+        }
+
+        rangeInfoElement.textContent =
+            formatDate(startDate) +
+            ' → ' +
+            formatDate(currentEndDate);
+    }
+
+
+    function formatDate(date) {
+        return date.toLocaleDateString(
+            undefined,
+            {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }
+        );
+    }
+
+
+    /*
+     * Change the end date of the 180-day range.
+     */
+    setEndDateButton.addEventListener('click', function () {
+
+        if (!endDateInput.value) {
+            return;
+        }
+
+        currentEndDate = stringToDate(
+            endDateInput.value
+        );
+
+        /*
+         * Remember the range endpoint separately.
+         */
+        localStorage.setItem(
+            END_DATE_STORAGE_KEY,
+            dateToString(currentEndDate)
+        );
+
+        /*
+         * Reset the Shift-click anchor because the visible
+         * range has changed.
+         */
+        lastClickedDate = null;
+
+        updateUrl();
+        render();
+    });
+
+
+    /*
+     * Also allow pressing Enter in the date field.
+     */
+    endDateInput.addEventListener('keydown', function (event) {
+
+        if (event.key === 'Enter') {
+            setEndDateButton.click();
+        }
+
+    });
+
+
+    /*
+     * Initialise.
+     */
+    loadState();
+    render();
+
+})();
+</script>
+
+</body>
+</html>
