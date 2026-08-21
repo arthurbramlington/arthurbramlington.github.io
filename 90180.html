@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>180 Day Selector</title>
+
+    <title>Schengen 90/180 Calculator</title>
 
     <style>
         * {
@@ -60,37 +61,50 @@
             background: #444;
         }
 
-        .selector-wrapper {
+        .selector-wrapper,
+        .future-wrapper {
             width: 100%;
             overflow-x: auto;
-            overflow-y: hidden;
+            overflow-y: visible;
             padding-bottom: 15px;
             border: 1px solid #ddd;
             background: white;
             border-radius: 8px;
         }
 
-        .days {
+        .days,
+        .future-days {
             display: flex;
             width: max-content;
             padding: 15px;
             gap: 5px;
         }
 
-        .day {
+        .day,
+        .future-day {
             width: 58px;
             min-width: 58px;
-            height: 75px;
             border: 1px solid #ddd;
             border-radius: 6px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
+            user-select: none;
+        }
+
+        .day {
+            height: 88px;
             justify-content: center;
             cursor: pointer;
-            user-select: none;
             background: #fafafa;
             transition: background 0.1s, border-color 0.1s;
+        }
+
+        .future-day {
+            height: 108px;
+            justify-content: center;
+            background: #fafafa;
         }
 
         .day:hover {
@@ -98,19 +112,22 @@
             background: #eee;
         }
 
-        .day .weekday {
+        .day .weekday,
+        .future-day .weekday {
             font-size: 11px;
             color: #777;
             margin-bottom: 5px;
             text-transform: uppercase;
         }
 
-        .day .date {
+        .day .date,
+        .future-day .date {
             font-size: 15px;
             font-weight: 600;
         }
 
-        .day .year {
+        .day .year,
+        .future-day .year {
             font-size: 10px;
             color: #999;
             margin-top: 3px;
@@ -130,6 +147,73 @@
         .day.today {
             outline: 2px solid #4a90e2;
             outline-offset: -2px;
+        }
+
+        /*
+         * Position number at bottom of each day.
+         */
+
+        .day-counter,
+        .future-counter {
+            position: absolute;
+            bottom: 4px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            color: #999;
+            font-weight: 600;
+        }
+
+        .day.selected .day-counter {
+            color: #aaa;
+        }
+
+        /*
+         * Future calculation number.
+         *
+         * This is now the ACTUAL maximum number
+         * of consecutive Schengen days available
+         * starting on this date.
+         */
+
+        .future-day .available {
+            margin-top: 6px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #159447;
+        }
+
+        .future-day .available.zero {
+            color: #d00000;
+        }
+
+        /*
+         * Highlight a day from which a full
+         * 90 consecutive days are possible.
+         */
+
+        .future-day.possible-start {
+            background: #e9f8ee;
+            border: 2px solid #159447;
+        }
+
+        .future-day.possible-start::after {
+            content: "90 straight days possible from this point";
+            position: absolute;
+            top: -44px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 165px;
+            padding: 6px 8px;
+            background: #159447;
+            color: white;
+            border-radius: 5px;
+            font-size: 10px;
+            line-height: 1.25;
+            text-align: center;
+            font-weight: 600;
+            z-index: 10;
         }
 
         .summary {
@@ -166,77 +250,13 @@
             font-size: 13px;
         }
 
-        /* ---------------------------------------
-           FUTURE RANGE
-        --------------------------------------- */
-
         .future-section {
-            margin-top: 35px;
+            margin-top: 50px;
         }
 
         .future-section h2 {
             margin: 0 0 15px;
             font-size: 20px;
-        }
-
-        .future-wrapper {
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding-bottom: 15px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 8px;
-        }
-
-        .future-days {
-            display: flex;
-            width: max-content;
-            padding: 15px;
-            gap: 5px;
-        }
-
-        .future-day {
-            width: 58px;
-            min-width: 58px;
-            height: 95px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            background: #fafafa;
-        }
-
-        .future-day .weekday {
-            font-size: 11px;
-            color: #777;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .future-day .date {
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .future-day .year {
-            font-size: 10px;
-            color: #999;
-            margin-top: 3px;
-        }
-
-        .future-day .available {
-            margin-top: 6px;
-            font-size: 18px;
-            font-weight: 700;
-            color: #159447;
-        }
-
-        .future-day .available.negative {
-            color: #d00000;
         }
 
         .future-info {
@@ -247,14 +267,19 @@
     </style>
 </head>
 
+
 <body>
 
 <div class="container">
 
-    <h1>180 Day Selector</h1>
+    <h1>Schengen 90/180 Calculator</h1>
+
 
     <div class="controls">
-        <label for="endDate">Range ends on:</label>
+
+        <label for="endDate">
+            Current 180-day period ends on:
+        </label>
 
         <input
             type="date"
@@ -264,40 +289,79 @@
         <button id="setEndDate">
             Set Range
         </button>
+
     </div>
 
-    <!-- CURRENT 180 DAYS -->
+
+    <!--
+        CURRENT / HISTORICAL 180 DAYS
+    -->
 
     <div class="selector-wrapper">
-        <div id="days" class="days"></div>
+
+        <div
+            id="days"
+            class="days"
+        ></div>
+
     </div>
 
-    <div id="summary" class="summary">
-        <span class="count" id="selectedCount">0</span>
-        selected days
 
-        <div class="range-info" id="rangeInfo"></div>
+    <div
+        id="summary"
+        class="summary"
+    >
+
+        <span
+            class="count"
+            id="selectedCount"
+        >0</span>
+
+        Schengen days in this 180-day period
+
+        <div
+            class="range-info"
+            id="rangeInfo"
+        ></div>
+
     </div>
+
 
     <div class="help">
-        Click individual dates to select them. Hold <strong>Shift</strong>
-        while clicking to select a range.
+
+        Click individual dates to mark days spent in Schengen.
+        Hold <strong>Shift</strong> while clicking to select a range.
+
     </div>
 
 
-    <!-- FUTURE 180 DAYS -->
+    <!--
+        FUTURE 180 DAYS
+    -->
 
     <div class="future-section">
 
-        <h2>Following 180 Days</h2>
+        <h2>
+            Future availability
+        </h2>
+
 
         <div class="future-wrapper">
-            <div id="futureDays" class="future-days"></div>
+
+            <div
+                id="futureDays"
+                class="future-days"
+            ></div>
+
         </div>
 
+
         <div class="future-info">
-            The green number shows how many days remain available under
-            the 90-day limit, based on the preceding 180 days.
+
+            The green number is the maximum number of
+            consecutive Schengen days you could stay
+            if you entered on that date.
+
         </div>
 
     </div>
@@ -306,10 +370,13 @@
 
 
 <script>
+
 (function () {
 
     const RANGE_LENGTH = 180;
-    const LIMIT = 90;
+
+    const MAX_SCHENGEN_DAYS = 90;
+
 
     const daysContainer =
         document.getElementById('days');
@@ -332,6 +399,7 @@
     const rangeInfoElement =
         document.getElementById('rangeInfo');
 
+
     const STORAGE_KEY =
         'dateSelectorSelectedDates';
 
@@ -339,12 +407,21 @@
         'dateSelectorEndDate';
 
 
+    /*
+     * ----------------------------------------
+     * DATE HELPERS
+     * ----------------------------------------
+     */
+
     function pad(number) {
-        return String(number).padStart(2, '0');
+
+        return String(number)
+            .padStart(2, '0');
     }
 
 
     function dateToString(date) {
+
         return (
             date.getFullYear() +
             '-' +
@@ -357,8 +434,15 @@
 
     function stringToDate(dateString) {
 
-        const [year, month, day] =
-            dateString.split('-').map(Number);
+        const [
+            year,
+            month,
+            day
+        ] =
+            dateString
+                .split('-')
+                .map(Number);
+
 
         return new Date(
             year,
@@ -370,7 +454,8 @@
 
     function addDays(date, amount) {
 
-        const result = new Date(date);
+        const result =
+            new Date(date);
 
         result.setDate(
             result.getDate() + amount
@@ -382,7 +467,8 @@
 
     function getToday() {
 
-        const now = new Date();
+        const now =
+            new Date();
 
         return new Date(
             now.getFullYear(),
@@ -406,7 +492,9 @@
 
 
     /*
-     * Load selected dates.
+     * ----------------------------------------
+     * STATE
+     * ----------------------------------------
      */
 
     function loadSelectedDates() {
@@ -414,22 +502,31 @@
         try {
 
             const stored =
-                localStorage.getItem(STORAGE_KEY);
+                localStorage.getItem(
+                    STORAGE_KEY
+                );
+
 
             if (!stored) {
+
                 return new Set();
             }
+
 
             const parsed =
                 JSON.parse(stored);
 
+
             if (!Array.isArray(parsed)) {
+
                 return new Set();
             }
 
+
             return new Set(parsed);
 
-        } catch (error) {
+        }
+        catch (error) {
 
             console.error(
                 'Could not load selected dates:',
@@ -444,13 +541,18 @@
     let selectedDates =
         loadSelectedDates();
 
-    let lastClickedDate = null;
+
+    let lastClickedDate =
+        null;
+
 
     let currentEndDate;
 
 
     /*
-     * Save selected dates.
+     * ----------------------------------------
+     * STORAGE / URL
+     * ----------------------------------------
      */
 
     function saveSelectedDates() {
@@ -466,32 +568,32 @@
     }
 
 
-    /*
-     * Save the current endpoint.
-     */
-
     function saveEndDate() {
 
         localStorage.setItem(
             END_DATE_STORAGE_KEY,
-            dateToString(currentEndDate)
+            dateToString(
+                currentEndDate
+            )
         );
     }
 
 
-    /*
-     * Update URL.
-     */
-
     function updateUrl() {
 
         const url =
-            new URL(window.location.href);
+            new URL(
+                window.location.href
+            );
+
 
         url.searchParams.set(
             'end',
-            dateToString(currentEndDate)
+            dateToString(
+                currentEndDate
+            )
         );
+
 
         if (selectedDates.size > 0) {
 
@@ -502,12 +604,14 @@
                     .join(',')
             );
 
-        } else {
+        }
+        else {
 
             url.searchParams.delete(
                 'selected'
             );
         }
+
 
         window.history.replaceState(
             {},
@@ -519,42 +623,57 @@
     }
 
 
-    /*
-     * Load state from URL/localStorage.
-     */
-
     function loadState() {
 
         const url =
-            new URL(window.location.href);
+            new URL(
+                window.location.href
+            );
+
+
+        /*
+         * END DATE
+         */
 
         const urlEnd =
-            url.searchParams.get('end');
+            url.searchParams.get(
+                'end'
+            );
+
 
         if (
             urlEnd &&
-            /^\d{4}-\d{2}-\d{2}$/.test(urlEnd)
+            /^\d{4}-\d{2}-\d{2}$/
+                .test(urlEnd)
         ) {
 
             currentEndDate =
-                stringToDate(urlEnd);
+                stringToDate(
+                    urlEnd
+                );
 
-        } else {
+        }
+        else {
 
             const storedEnd =
                 localStorage.getItem(
                     END_DATE_STORAGE_KEY
                 );
 
+
             if (
                 storedEnd &&
-                /^\d{4}-\d{2}-\d{2}$/.test(storedEnd)
+                /^\d{4}-\d{2}-\d{2}$/
+                    .test(storedEnd)
             ) {
 
                 currentEndDate =
-                    stringToDate(storedEnd);
+                    stringToDate(
+                        storedEnd
+                    );
 
-            } else {
+            }
+            else {
 
                 currentEndDate =
                     getToday();
@@ -563,11 +682,14 @@
 
 
         /*
-         * URL selections take priority over localStorage.
+         * SELECTED DATES
          */
 
         const urlSelected =
-            url.searchParams.get('selected');
+            url.searchParams.get(
+                'selected'
+            );
+
 
         if (urlSelected !== null) {
 
@@ -575,12 +697,16 @@
                 urlSelected
                     .split(',')
                     .filter(function (date) {
+
                         return /^\d{4}-\d{2}-\d{2}$/
                             .test(date);
+
                     });
+
 
             selectedDates =
                 new Set(dates);
+
 
             localStorage.setItem(
                 STORAGE_KEY,
@@ -592,17 +718,182 @@
 
 
         endDateInput.value =
-            dateToString(currentEndDate);
+            dateToString(
+                currentEndDate
+            );
     }
 
 
     /*
-     * Render the original selectable range.
+     * ----------------------------------------
+     * SCHENGEN CALCULATION
+     * ----------------------------------------
+     */
+
+
+    /*
+     * Count Schengen days in a rolling
+     * 180-calendar-day window.
+     *
+     * IMPORTANT:
+     *
+     * The current day IS INCLUDED.
+     *
+     * Therefore:
+     *
+     * 180-day window =
+     *
+     * current day
+     * + previous 179 days
+     */
+
+    function countSchengenDays(
+        date
+    ) {
+
+        const windowEnd =
+            dateToString(
+                date
+            );
+
+
+        const windowStart =
+            dateToString(
+                addDays(
+                    date,
+                    -(RANGE_LENGTH - 1)
+                )
+            );
+
+
+        let count = 0;
+
+
+        selectedDates.forEach(
+            function (selectedDate) {
+
+                if (
+                    selectedDate >=
+                        windowStart &&
+                    selectedDate <=
+                        windowEnd
+                ) {
+
+                    count++;
+                }
+            }
+        );
+
+
+        return count;
+    }
+
+
+    /*
+     * Determine how many consecutive days
+     * someone can stay starting on startDate.
+     *
+     * We simulate each day of the proposed stay.
+     *
+     * If adding that day would make the
+     * rolling 180-day total exceed 90,
+     * the stay must stop before that day.
+     */
+
+    function getMaximumConsecutiveStay(
+        startDate
+    ) {
+
+        let consecutiveDays = 0;
+
+
+        for (
+            let i = 0;
+            i < 180;
+            i++
+        ) {
+
+            const proposedDate =
+                addDays(
+                    startDate,
+                    i
+                );
+
+
+            /*
+             * The proposed date itself is
+             * a Schengen day.
+             *
+             * Temporarily treat it as selected.
+             */
+
+            const proposedString =
+                dateToString(
+                    proposedDate
+                );
+
+
+            /*
+             * Count existing selected dates
+             * in the 180-day window.
+             */
+
+            let count =
+                countSchengenDays(
+                    proposedDate
+                );
+
+
+            /*
+             * If this date isn't already in
+             * selectedDates, add it to the
+             * count because we're testing
+             * a hypothetical stay.
+             */
+
+            if (
+                !selectedDates.has(
+                    proposedString
+                )
+            ) {
+
+                count++;
+            }
+
+
+            /*
+             * If the rolling window would contain
+             * more than 90 Schengen days, this
+             * proposed date cannot be included.
+             */
+
+            if (
+                count >
+                MAX_SCHENGEN_DAYS
+            ) {
+
+                break;
+            }
+
+
+            consecutiveDays++;
+        }
+
+
+        return consecutiveDays;
+    }
+
+
+    /*
+     * ----------------------------------------
+     * CURRENT 180 DAYS
+     * ----------------------------------------
      */
 
     function render() {
 
         daysContainer.innerHTML = '';
+
 
         const startDate =
             addDays(
@@ -618,19 +909,33 @@
         ) {
 
             const date =
-                addDays(startDate, i);
+                addDays(
+                    startDate,
+                    i
+                );
+
 
             const dateString =
-                dateToString(date);
+                dateToString(
+                    date
+                );
+
 
             const dayElement =
-                document.createElement('div');
+                document.createElement(
+                    'div'
+                );
+
 
             dayElement.className =
                 'day';
 
 
-            if (selectedDates.has(dateString)) {
+            if (
+                selectedDates.has(
+                    dateString
+                )
+            ) {
 
                 dayElement.classList.add(
                     'selected'
@@ -640,7 +945,9 @@
 
             if (
                 dateString ===
-                dateToString(getToday())
+                dateToString(
+                    getToday()
+                )
             ) {
 
                 dayElement.classList.add(
@@ -649,8 +956,14 @@
             }
 
 
+            /*
+             * Weekday
+             */
+
             const weekday =
-                document.createElement('div');
+                document.createElement(
+                    'div'
+                );
 
             weekday.className =
                 'weekday';
@@ -658,12 +971,20 @@
             weekday.textContent =
                 date.toLocaleDateString(
                     undefined,
-                    { weekday: 'short' }
+                    {
+                        weekday: 'short'
+                    }
                 );
 
 
+            /*
+             * Date
+             */
+
             const dateNumber =
-                document.createElement('div');
+                document.createElement(
+                    'div'
+                );
 
             dateNumber.className =
                 'date';
@@ -671,17 +992,41 @@
             dateNumber.textContent =
                 date.getDate() +
                 '/' +
-                (date.getMonth() + 1);
+                (
+                    date.getMonth() + 1
+                );
 
+
+            /*
+             * Year
+             */
 
             const year =
-                document.createElement('div');
+                document.createElement(
+                    'div'
+                );
 
             year.className =
                 'year';
 
             year.textContent =
                 date.getFullYear();
+
+
+            /*
+             * Position counter
+             */
+
+            const counter =
+                document.createElement(
+                    'div'
+                );
+
+            counter.className =
+                'day-counter';
+
+            counter.textContent =
+                i + 1;
 
 
             dayElement.appendChild(
@@ -696,10 +1041,19 @@
                 year
             );
 
+            dayElement.appendChild(
+                counter
+            );
+
+
+            /*
+             * Selection
+             */
 
             dayElement.addEventListener(
                 'click',
                 function (event) {
+
 
                     /*
                      * SHIFT CLICK
@@ -715,21 +1069,38 @@
                                 dateString
                             );
 
-                        let rangeStart =
-                            lastClickedDate <
-                            clickedDate
-                                ? lastClickedDate
-                                : clickedDate;
 
-                        let rangeEnd =
+                        let rangeStart;
+
+                        let rangeEnd;
+
+
+                        if (
                             lastClickedDate <
                             clickedDate
-                                ? clickedDate
-                                : lastClickedDate;
+                        ) {
+
+                            rangeStart =
+                                lastClickedDate;
+
+                            rangeEnd =
+                                clickedDate;
+
+                        }
+                        else {
+
+                            rangeStart =
+                                clickedDate;
+
+                            rangeEnd =
+                                lastClickedDate;
+                        }
 
 
                         let current =
-                            new Date(rangeStart);
+                            new Date(
+                                rangeStart
+                            );
 
 
                         while (
@@ -742,6 +1113,7 @@
                                 )
                             );
 
+
                             current =
                                 addDays(
                                     current,
@@ -749,10 +1121,11 @@
                                 );
                         }
 
-                    } else {
+                    }
+                    else {
 
                         /*
-                         * Normal click toggles selection.
+                         * Normal click.
                          */
 
                         if (
@@ -765,7 +1138,8 @@
                                 dateString
                             );
 
-                        } else {
+                        }
+                        else {
 
                             selectedDates.add(
                                 dateString
@@ -778,6 +1152,7 @@
                         stringToDate(
                             dateString
                         );
+
 
                     saveSelectedDates();
 
@@ -799,7 +1174,9 @@
 
 
     /*
-     * Update current range summary.
+     * ----------------------------------------
+     * SUMMARY
+     * ----------------------------------------
      */
 
     function updateSummary() {
@@ -810,41 +1187,28 @@
                 -(RANGE_LENGTH - 1)
             );
 
-        const startString =
-            dateToString(startDate);
 
-        const endString =
-            dateToString(currentEndDate);
-
-
-        let count = 0;
-
-
-        selectedDates.forEach(
-            function (dateString) {
-
-                if (
-                    dateString >= startString &&
-                    dateString <= endString
-                ) {
-
-                    count++;
-                }
-            }
-        );
+        const count =
+            countSchengenDays(
+                currentEndDate
+            );
 
 
         selectedCountElement.textContent =
             count;
 
 
-        if (count > LIMIT) {
+        if (
+            count >
+            MAX_SCHENGEN_DAYS
+        ) {
 
             summaryElement.classList.add(
                 'over-limit'
             );
 
-        } else {
+        }
+        else {
 
             summaryElement.classList.remove(
                 'over-limit'
@@ -853,61 +1217,26 @@
 
 
         rangeInfoElement.textContent =
-            formatDate(startDate) +
+            formatDate(
+                startDate
+            ) +
             ' → ' +
-            formatDate(currentEndDate);
+            formatDate(
+                currentEndDate
+            );
     }
 
 
     /*
-     * Count selected dates in a 180-day period.
-     *
-     * startDate = first day included
-     * endDate   = last day included
-     */
-
-    function countSelectedDays(
-        startDate,
-        endDate
-    ) {
-
-        const startString =
-            dateToString(startDate);
-
-        const endString =
-            dateToString(endDate);
-
-        let count = 0;
-
-
-        selectedDates.forEach(
-            function (dateString) {
-
-                if (
-                    dateString >= startString &&
-                    dateString <= endString
-                ) {
-
-                    count++;
-                }
-            }
-        );
-
-
-        return count;
-    }
-
-
-    /*
-     * Render the next 180 days.
-     *
-     * The first future day is the day AFTER
-     * currentEndDate.
+     * ----------------------------------------
+     * FUTURE 180 DAYS
+     * ----------------------------------------
      */
 
     function renderFutureDays() {
 
-        futureDaysContainer.innerHTML = '';
+        futureDaysContainer.innerHTML =
+            '';
 
 
         const futureStartDate =
@@ -916,6 +1245,13 @@
                 1
             );
 
+
+        const futureData = [];
+
+
+        /*
+         * Calculate each future date.
+         */
 
         for (
             let i = 0;
@@ -931,132 +1267,203 @@
 
 
             /*
-             * For this future date, examine the
-             * 180 days immediately preceding it.
-             *
-             * Importantly, the future date itself
-             * is NOT included.
+             * How many consecutive days could
+             * we stay if we entered here?
              */
 
-            const precedingEndDate =
-                addDays(
-                    futureDate,
-                    -1
+            const maximumStay =
+                getMaximumConsecutiveStay(
+                    futureDate
                 );
 
 
-            const precedingStartDate =
-                addDays(
-                    precedingEndDate,
-                    -(RANGE_LENGTH - 1)
+            futureData.push({
+                date: futureDate,
+                maximumStay: maximumStay,
+                counter: i + 1
+            });
+        }
+
+
+        /*
+         * Render each future day.
+         */
+
+        futureData.forEach(
+            function (data) {
+
+                const date =
+                    data.date;
+
+
+                const dateElement =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                dateElement.className =
+                    'future-day';
+
+
+                /*
+                 * Highlight genuine 90-day
+                 * starting points.
+                 */
+
+                if (
+                    data.maximumStay >= 90
+                ) {
+
+                    dateElement.classList.add(
+                        'possible-start'
+                    );
+                }
+
+
+                /*
+                 * Weekday
+                 */
+
+                const weekday =
+                    document.createElement(
+                        'div'
+                    );
+
+                weekday.className =
+                    'weekday';
+
+                weekday.textContent =
+                    date.toLocaleDateString(
+                        undefined,
+                        {
+                            weekday: 'short'
+                        }
+                    );
+
+
+                /*
+                 * Date
+                 */
+
+                const dateNumber =
+                    document.createElement(
+                        'div'
+                    );
+
+                dateNumber.className =
+                    'date';
+
+                dateNumber.textContent =
+                    date.getDate() +
+                    '/' +
+                    (
+                        date.getMonth() + 1
+                    );
+
+
+                /*
+                 * Year
+                 */
+
+                const year =
+                    document.createElement(
+                        'div'
+                    );
+
+                year.className =
+                    'year';
+
+                year.textContent =
+                    date.getFullYear();
+
+
+                /*
+                 * Maximum consecutive stay.
+                 */
+
+                const available =
+                    document.createElement(
+                        'div'
+                    );
+
+                available.className =
+                    'available';
+
+
+                if (
+                    data.maximumStay === 0
+                ) {
+
+                    available.classList.add(
+                        'zero'
+                    );
+                }
+
+
+                available.textContent =
+                    data.maximumStay;
+
+
+                /*
+                 * Position counter.
+                 */
+
+                const counter =
+                    document.createElement(
+                        'div'
+                    );
+
+                counter.className =
+                    'future-counter';
+
+                counter.textContent =
+                    data.counter;
+
+
+                dateElement.appendChild(
+                    weekday
+                );
+
+                dateElement.appendChild(
+                    dateNumber
+                );
+
+                dateElement.appendChild(
+                    year
+                );
+
+                dateElement.appendChild(
+                    available
+                );
+
+                dateElement.appendChild(
+                    counter
                 );
 
 
-            const selectedCount =
-                countSelectedDays(
-                    precedingStartDate,
-                    precedingEndDate
-                );
-
-
-            const remaining =
-                LIMIT - selectedCount;
-
-
-            const dateElement =
-                document.createElement('div');
-
-            dateElement.className =
-                'future-day';
-
-
-            const weekday =
-                document.createElement('div');
-
-            weekday.className =
-                'weekday';
-
-            weekday.textContent =
-                futureDate.toLocaleDateString(
-                    undefined,
-                    { weekday: 'short' }
-                );
-
-
-            const dateNumber =
-                document.createElement('div');
-
-            dateNumber.className =
-                'date';
-
-            dateNumber.textContent =
-                futureDate.getDate() +
-                '/' +
-                (futureDate.getMonth() + 1);
-
-
-            const year =
-                document.createElement('div');
-
-            year.className =
-                'year';
-
-            year.textContent =
-                futureDate.getFullYear();
-
-
-            const available =
-                document.createElement('div');
-
-            available.className =
-                'available';
-
-
-            if (remaining < 0) {
-
-                available.classList.add(
-                    'negative'
+                futureDaysContainer.appendChild(
+                    dateElement
                 );
             }
-
-
-            available.textContent =
-                remaining;
-
-
-            dateElement.appendChild(
-                weekday
-            );
-
-            dateElement.appendChild(
-                dateNumber
-            );
-
-            dateElement.appendChild(
-                year
-            );
-
-            dateElement.appendChild(
-                available
-            );
-
-
-            futureDaysContainer.appendChild(
-                dateElement
-            );
-        }
+        );
     }
 
 
     /*
-     * Change the end date.
+     * ----------------------------------------
+     * RANGE END DATE
+     * ----------------------------------------
      */
 
     setEndDateButton.addEventListener(
         'click',
         function () {
 
-            if (!endDateInput.value) {
+            if (
+                !endDateInput.value
+            ) {
+
                 return;
             }
 
@@ -1082,14 +1489,17 @@
 
 
     /*
-     * Enter key in date field.
+     * Pressing Enter also changes the
+     * range endpoint.
      */
 
     endDateInput.addEventListener(
         'keydown',
         function (event) {
 
-            if (event.key === 'Enter') {
+            if (
+                event.key === 'Enter'
+            ) {
 
                 setEndDateButton.click();
             }
@@ -1098,7 +1508,9 @@
 
 
     /*
-     * Initialise.
+     * ----------------------------------------
+     * INITIALISE
+     * ----------------------------------------
      */
 
     loadState();
