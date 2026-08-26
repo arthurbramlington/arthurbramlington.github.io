@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,38 +29,55 @@
             font-size: 24px;
         }
 
+        /*
+         * ----------------------------------------
+         * RE-ENTRY CONTROLS
+         * ----------------------------------------
+         */
+
         .controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
 
         .controls label {
             font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .date-nudge {
+            width: 40px;
+            height: 38px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .date-nudge:hover {
+            background: #eee;
         }
 
         .controls input {
-            padding: 9px 12px;
+            height: 38px;
+            padding: 7px 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 15px;
         }
 
-        .controls button {
-            padding: 9px 16px;
-            border: 0;
-            border-radius: 5px;
-            background: #222;
-            color: white;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        .controls button:hover {
-            background: #444;
-        }
+        /*
+         * ----------------------------------------
+         * DAY SELECTORS
+         * ----------------------------------------
+         */
 
         .selector-wrapper,
         .future-wrapper {
@@ -80,31 +98,33 @@
             gap: 5px;
         }
 
-        .day,
-        .future-day {
+        /*
+         * Historical days
+         */
+
+        .day {
             width: 58px;
             min-width: 58px;
+            height: 88px;
+
             border: 1px solid #ddd;
             border-radius: 6px;
+
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+
             position: relative;
-            user-select: none;
-        }
 
-        .day {
-            height: 88px;
-            justify-content: center;
             cursor: pointer;
-            background: #fafafa;
-            transition: background 0.1s, border-color 0.1s;
-        }
+            user-select: none;
 
-        .future-day {
-            height: 108px;
-            justify-content: center;
             background: #fafafa;
+
+            transition:
+                background 0.1s,
+                border-color 0.1s;
         }
 
         .day:hover {
@@ -112,12 +132,30 @@
             background: #eee;
         }
 
+        /*
+         * Historical selected Schengen day.
+         */
+
+        .day.selected {
+            background: #222;
+            color: white;
+            border-color: #222;
+        }
+
+        /*
+         * Date text
+         */
+
         .day .weekday,
         .future-day .weekday {
             font-size: 11px;
             color: #777;
             margin-bottom: 5px;
             text-transform: uppercase;
+        }
+
+        .day.selected .weekday {
+            color: #ccc;
         }
 
         .day .date,
@@ -133,33 +171,22 @@
             margin-top: 3px;
         }
 
-        .day.selected {
-            background: #222;
-            color: white;
-            border-color: #222;
-        }
-
-        .day.selected .weekday,
         .day.selected .year {
             color: #ccc;
         }
 
-        .day.today {
-            outline: 2px solid #4a90e2;
-            outline-offset: -2px;
-        }
-
         /*
-         * Position number at bottom of each day.
+         * Position number for historical range.
          */
 
-        .day-counter,
-        .future-counter {
+        .day-counter {
             position: absolute;
             bottom: 4px;
             left: 0;
             right: 0;
+
             text-align: center;
+
             font-size: 9px;
             color: #999;
             font-weight: 600;
@@ -170,58 +197,29 @@
         }
 
         /*
-         * Future calculation number.
-         *
-         * This is now the ACTUAL maximum number
-         * of consecutive Schengen days available
-         * starting on this date.
+         * Today's outline.
          */
 
-        .future-day .available {
-            margin-top: 6px;
-            font-size: 18px;
-            font-weight: 700;
-            color: #159447;
-        }
-
-        .future-day .available.zero {
-            color: #d00000;
+        .day.today {
+            outline: 2px solid #4a90e2;
+            outline-offset: -2px;
         }
 
         /*
-         * Highlight a day from which a full
-         * 90 consecutive days are possible.
+         * ----------------------------------------
+         * SUMMARY
+         * ----------------------------------------
          */
-
-        .future-day.possible-start {
-            background: #e9f8ee;
-            border: 2px solid #159447;
-        }
-
-        .future-day.possible-start::after {
-            content: "90 straight days possible from this point";
-            position: absolute;
-            top: -44px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 165px;
-            padding: 6px 8px;
-            background: #159447;
-            color: white;
-            border-radius: 5px;
-            font-size: 10px;
-            line-height: 1.25;
-            text-align: center;
-            font-weight: 600;
-            z-index: 10;
-        }
 
         .summary {
             margin-top: 20px;
             padding: 18px 20px;
+
             background: white;
+
             border: 1px solid #ddd;
             border-radius: 8px;
+
             font-size: 18px;
             font-weight: 600;
         }
@@ -239,16 +237,26 @@
 
         .range-info {
             margin-top: 8px;
+
             color: #777;
+
             font-size: 13px;
             font-weight: normal;
         }
 
         .help {
             margin-top: 12px;
+
             color: #666;
+
             font-size: 13px;
         }
+
+        /*
+         * ----------------------------------------
+         * FUTURE / STAY FORECAST
+         * ----------------------------------------
+         */
 
         .future-section {
             margin-top: 50px;
@@ -261,8 +269,134 @@
 
         .future-info {
             margin-top: 8px;
+
             color: #777;
+
             font-size: 13px;
+        }
+
+        .future-day {
+            width: 58px;
+            min-width: 58px;
+            height: 75px;
+
+            border: 1px solid #ddd;
+            border-radius: 6px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            position: relative;
+
+            user-select: none;
+
+            background: #fafafa;
+
+            transition:
+                background 0.15s,
+                border-color 0.15s;
+        }
+
+        /*
+         * LEGAL STAY
+         */
+
+        .future-day.green {
+            background: #e9f8ee;
+            border-color: #159447;
+        }
+
+        /*
+         * ILLEGAL / MUST LEAVE
+         */
+
+        .future-day.red {
+            background: #fff0f0;
+            border-color: #d00000;
+            color: #a00000;
+        }
+
+        /*
+         * The re-entry date itself is illegal.
+         */
+
+        .future-day.reentry-illegal {
+            background: #fff6cc;
+            border: 2px solid #d5a900;
+            color: #7d6200;
+        }
+
+        /*
+         * Re-entry date marker.
+         */
+
+        .future-day.reentry {
+            box-shadow:
+                0 0 0 2px #4a90e2;
+        }
+
+        /*
+         * Small label under future date.
+         */
+
+        .future-day .status {
+            margin-top: 5px;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            text-transform: uppercase;
+        }
+
+        .future-day.green .status {
+            color: #159447;
+        }
+
+        .future-day.red .status {
+            color: #d00000;
+        }
+
+        .future-day.reentry-illegal .status {
+            color: #a07b00;
+        }
+
+        /*
+         * ----------------------------------------
+         * TOOLTIP
+         * ----------------------------------------
+         */
+
+        .future-day[data-tooltip] {
+            cursor: default;
+        }
+
+        .future-day[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+
+            position: absolute;
+
+            bottom: calc(100% + 8px);
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            width: 170px;
+
+            padding: 7px 9px;
+
+            background: #222;
+            color: white;
+
+            border-radius: 5px;
+
+            font-size: 11px;
+            line-height: 1.3;
+
+            text-align: center;
+
+            z-index: 20;
         }
     </style>
 </head>
@@ -275,26 +409,47 @@
     <h1>Schengen 90/180 Calculator</h1>
 
 
+    <!--
+        RE-ENTRY DATE
+    -->
+
     <div class="controls">
 
         <label for="endDate">
-            Current 180-day period ends on:
+            Proposed re-entry:
         </label>
+
+
+        <button
+            type="button"
+            class="date-nudge"
+            id="previousDay"
+            title="Previous day"
+        >
+            ←
+        </button>
+
 
         <input
             type="date"
             id="endDate"
-        >
+        />
 
-        <button id="setEndDate">
-            Set Range
+
+        <button
+            type="button"
+            class="date-nudge"
+            id="nextDay"
+            title="Next day"
+        >
+            →
         </button>
 
     </div>
 
 
     <!--
-        CURRENT / HISTORICAL 180 DAYS
+        PREVIOUS 180 DAYS
     -->
 
     <div class="selector-wrapper">
@@ -317,7 +472,7 @@
             id="selectedCount"
         >0</span>
 
-        Schengen days in this 180-day period
+        Schengen days in the preceding 180 days
 
         <div
             class="range-info"
@@ -329,20 +484,20 @@
 
     <div class="help">
 
-        Click individual dates to mark days spent in Schengen.
+        Click dates to mark days spent in Schengen.
         Hold <strong>Shift</strong> while clicking to select a range.
 
     </div>
 
 
     <!--
-        FUTURE 180 DAYS
+        FUTURE FORECAST
     -->
 
     <div class="future-section">
 
         <h2>
-            Future availability
+            If you re-enter on this date
         </h2>
 
 
@@ -358,9 +513,9 @@
 
         <div class="future-info">
 
-            The green number is the maximum number of
-            consecutive Schengen days you could stay
-            if you entered on that date.
+            Green means you can remain in Schengen.
+            Red means you would need to have left before that date.
+            If the re-entry date itself is illegal, it is shown in yellow.
 
         </div>
 
@@ -375,7 +530,7 @@
 
     const RANGE_LENGTH = 180;
 
-    const MAX_SCHENGEN_DAYS = 90;
+    const MAX_DAYS = 90;
 
 
     const daysContainer =
@@ -387,8 +542,11 @@
     const endDateInput =
         document.getElementById('endDate');
 
-    const setEndDateButton =
-        document.getElementById('setEndDate');
+    const previousDayButton =
+        document.getElementById('previousDay');
+
+    const nextDayButton =
+        document.getElementById('nextDay');
 
     const selectedCountElement =
         document.getElementById('selectedCount');
@@ -546,7 +704,7 @@
         null;
 
 
-    let currentEndDate;
+    let reentryDate;
 
 
     /*
@@ -568,12 +726,12 @@
     }
 
 
-    function saveEndDate() {
+    function saveReentryDate() {
 
         localStorage.setItem(
             END_DATE_STORAGE_KEY,
             dateToString(
-                currentEndDate
+                reentryDate
             )
         );
     }
@@ -590,7 +748,7 @@
         url.searchParams.set(
             'end',
             dateToString(
-                currentEndDate
+                reentryDate
             )
         );
 
@@ -632,7 +790,7 @@
 
 
         /*
-         * END DATE
+         * RE-ENTRY DATE
          */
 
         const urlEnd =
@@ -647,7 +805,7 @@
                 .test(urlEnd)
         ) {
 
-            currentEndDate =
+            reentryDate =
                 stringToDate(
                     urlEnd
                 );
@@ -667,7 +825,7 @@
                     .test(storedEnd)
             ) {
 
-                currentEndDate =
+                reentryDate =
                     stringToDate(
                         storedEnd
                     );
@@ -675,14 +833,14 @@
             }
             else {
 
-                currentEndDate =
+                reentryDate =
                     getToday();
             }
         }
 
 
         /*
-         * SELECTED DATES
+         * SELECTED SCHENGEN DAYS
          */
 
         const urlSelected =
@@ -700,7 +858,6 @@
 
                         return /^\d{4}-\d{2}-\d{2}$/
                             .test(date);
-
                     });
 
 
@@ -719,50 +876,42 @@
 
         endDateInput.value =
             dateToString(
-                currentEndDate
+                reentryDate
             );
     }
 
 
     /*
      * ----------------------------------------
-     * SCHENGEN CALCULATION
+     * SCHENGEN CALCULATIONS
      * ----------------------------------------
      */
 
 
     /*
-     * Count Schengen days in a rolling
-     * 180-calendar-day window.
+     * Count actual selected Schengen days
+     * in the 180-day window ending on `date`.
      *
-     * IMPORTANT:
-     *
-     * The current day IS INCLUDED.
-     *
-     * Therefore:
-     *
-     * 180-day window =
-     *
-     * current day
-     * + previous 179 days
+     * The date itself is included.
      */
 
-    function countSchengenDays(
-        date
-    ) {
+    function countHistoricalDays(date) {
 
-        const windowEnd =
-            dateToString(
-                date
+        const windowStart =
+            addDays(
+                date,
+                -(RANGE_LENGTH - 1)
             );
 
 
-        const windowStart =
+        const startString =
             dateToString(
-                addDays(
-                    date,
-                    -(RANGE_LENGTH - 1)
-                )
+                windowStart
+            );
+
+        const endString =
+            dateToString(
+                date
             );
 
 
@@ -770,13 +919,11 @@
 
 
         selectedDates.forEach(
-            function (selectedDate) {
+            function (dateString) {
 
                 if (
-                    selectedDate >=
-                        windowStart &&
-                    selectedDate <=
-                        windowEnd
+                    dateString >= startString &&
+                    dateString <= endString
                 ) {
 
                     count++;
@@ -790,115 +937,274 @@
 
 
     /*
-     * Determine how many consecutive days
-     * someone can stay starting on startDate.
-     *
-     * We simulate each day of the proposed stay.
-     *
-     * If adding that day would make the
-     * rolling 180-day total exceed 90,
-     * the stay must stop before that day.
+     * Count actual selected Schengen days
+     * before a proposed date.
      */
 
-    function getMaximumConsecutiveStay(
-        startDate
+    function countHistoricalDaysBefore(
+        date
     ) {
 
-        let consecutiveDays = 0;
+        const windowStart =
+            addDays(
+                date,
+                -(RANGE_LENGTH - 1)
+            );
+
+        const windowEnd =
+            addDays(
+                date,
+                -1
+            );
 
 
-        for (
-            let i = 0;
-            i < 180;
-            i++
-        ) {
+        const startString =
+            dateToString(
+                windowStart
+            );
 
-            const proposedDate =
-                addDays(
-                    startDate,
-                    i
-                );
+        const endString =
+            dateToString(
+                windowEnd
+            );
 
 
-            /*
-             * The proposed date itself is
-             * a Schengen day.
-             *
-             * Temporarily treat it as selected.
-             */
-
-            const proposedString =
-                dateToString(
-                    proposedDate
-                );
+        let count = 0;
 
 
-            /*
-             * Count existing selected dates
-             * in the 180-day window.
-             */
+        selectedDates.forEach(
+            function (dateString) {
 
-            let count =
-                countSchengenDays(
-                    proposedDate
-                );
+                if (
+                    dateString >= startString &&
+                    dateString <= endString
+                ) {
 
-
-            /*
-             * If this date isn't already in
-             * selectedDates, add it to the
-             * count because we're testing
-             * a hypothetical stay.
-             */
-
-            if (
-                !selectedDates.has(
-                    proposedString
-                )
-            ) {
-
-                count++;
+                    count++;
+                }
             }
+        );
 
 
-            /*
-             * If the rolling window would contain
-             * more than 90 Schengen days, this
-             * proposed date cannot be included.
-             */
-
-            if (
-                count >
-                MAX_SCHENGEN_DAYS
-            ) {
-
-                break;
-            }
-
-
-            consecutiveDays++;
-        }
-
-
-        return consecutiveDays;
+        return count;
     }
 
 
     /*
      * ----------------------------------------
-     * CURRENT 180 DAYS
+     * FUTURE STAY LOGIC
+     * ----------------------------------------
+     *
+     * We simulate a hypothetical continuous
+     * stay from the re-entry date.
+     *
+     * Once the first illegal day is reached,
+     * the person is assumed to have left BEFORE
+     * that day.
+     *
+     * Therefore the hypothetical stay days
+     * are not carried forward beyond the red
+     * period.
+     *
+     * This allows another green period to appear
+     * later when older visits expire.
+     */
+
+
+    function calculateFutureStatus() {
+
+        const results = [];
+
+        let hypotheticalStay = [];
+
+
+        /*
+         * If the re-entry date itself is already
+         * illegal, everything afterwards is red.
+         */
+
+        const reentryHistoricalDays =
+            countHistoricalDaysBefore(
+                reentryDate
+            );
+
+
+        const reentryLegal =
+            reentryHistoricalDays <
+            MAX_DAYS;
+
+
+        /*
+         * If re-entry isn't legal, mark all
+         * future days red.
+         */
+
+        if (!reentryLegal) {
+
+            for (
+                let i = 0;
+                i < RANGE_LENGTH;
+                i++
+            ) {
+
+                const date =
+                    addDays(
+                        reentryDate,
+                        i
+                    );
+
+
+                results.push({
+                    date: date,
+                    status:
+                        i === 0
+                            ? 'yellow'
+                            : 'red'
+                });
+            }
+
+
+            return results;
+        }
+
+
+        /*
+         * Re-entry is legal.
+         *
+         * Now simulate the stay day-by-day.
+         */
+
+        for (
+            let i = 0;
+            i < RANGE_LENGTH;
+            i++
+        ) {
+
+            const date =
+                addDays(
+                    reentryDate,
+                    i
+                );
+
+
+            /*
+             * Remove hypothetical stay days
+             * that are now more than 179 days
+             * before this date.
+             */
+
+            const earliestAllowedDate =
+                addDays(
+                    date,
+                    -(RANGE_LENGTH - 1)
+                );
+
+
+            hypotheticalStay =
+                hypotheticalStay.filter(
+                    function (stayDate) {
+
+                        return stayDate >=
+                            earliestAllowedDate;
+                    }
+                );
+
+
+            /*
+             * Count actual historical Schengen
+             * days in this rolling window.
+             */
+
+            let historicalCount =
+                countHistoricalDaysBefore(
+                    date
+                );
+
+
+            /*
+             * The proposed date itself is
+             * another Schengen day.
+             */
+
+            let total =
+                historicalCount +
+                hypotheticalStay.length +
+                1;
+
+
+            /*
+             * If adding this day causes the
+             * rolling total to exceed 90,
+             * the person must have left before
+             * this date.
+             */
+
+            if (total > MAX_DAYS) {
+
+                results.push({
+                    date: date,
+                    status: 'red'
+                });
+
+
+                /*
+                 * Important:
+                 *
+                 * We do NOT add this day to the
+                 * hypothetical stay.
+                 *
+                 * We assume the person left before it.
+                 */
+
+                continue;
+            }
+
+
+            /*
+             * This day is legal.
+             */
+
+            results.push({
+                date: date,
+                status: 'green'
+            });
+
+
+            hypotheticalStay.push(
+                dateToString(date)
+            );
+        }
+
+
+        return results;
+    }
+
+
+    /*
+     * ----------------------------------------
+     * HISTORICAL 180 DAYS
      * ----------------------------------------
      */
 
-    function render() {
+    function renderHistoricalDays() {
 
         daysContainer.innerHTML = '';
 
 
+        /*
+         * The re-entry date itself is NOT included.
+         *
+         * Therefore:
+         *
+         * re-entry date - 180 days
+         * through
+         * re-entry date - 1 day
+         */
+
         const startDate =
             addDays(
-                currentEndDate,
-                -(RANGE_LENGTH - 1)
+                reentryDate,
+                -RANGE_LENGTH
             );
 
 
@@ -956,10 +1262,6 @@
             }
 
 
-            /*
-             * Weekday
-             */
-
             const weekday =
                 document.createElement(
                     'div'
@@ -977,10 +1279,6 @@
                 );
 
 
-            /*
-             * Date
-             */
-
             const dateNumber =
                 document.createElement(
                     'div'
@@ -997,10 +1295,6 @@
                 );
 
 
-            /*
-             * Year
-             */
-
             const year =
                 document.createElement(
                     'div'
@@ -1014,7 +1308,7 @@
 
 
             /*
-             * Position counter
+             * Historical position counter.
              */
 
             const counter =
@@ -1047,16 +1341,15 @@
 
 
             /*
-             * Selection
+             * Click handling.
              */
 
             dayElement.addEventListener(
                 'click',
                 function (event) {
 
-
                     /*
-                     * SHIFT CLICK
+                     * Shift-click.
                      */
 
                     if (
@@ -1125,7 +1418,8 @@
                     else {
 
                         /*
-                         * Normal click.
+                         * Normal click toggles
+                         * the date.
                          */
 
                         if (
@@ -1165,11 +1459,6 @@
                 dayElement
             );
         }
-
-
-        updateSummary();
-
-        renderFutureDays();
     }
 
 
@@ -1179,18 +1468,11 @@
      * ----------------------------------------
      */
 
-    function updateSummary() {
-
-        const startDate =
-            addDays(
-                currentEndDate,
-                -(RANGE_LENGTH - 1)
-            );
-
+    function renderSummary() {
 
         const count =
-            countSchengenDays(
-                currentEndDate
+            countHistoricalDaysBefore(
+                reentryDate
             );
 
 
@@ -1199,8 +1481,7 @@
 
 
         if (
-            count >
-            MAX_SCHENGEN_DAYS
+            count >= MAX_DAYS
         ) {
 
             summaryElement.classList.add(
@@ -1216,20 +1497,34 @@
         }
 
 
+        const startDate =
+            addDays(
+                reentryDate,
+                -RANGE_LENGTH
+            );
+
+
+        const endDate =
+            addDays(
+                reentryDate,
+                -1
+            );
+
+
         rangeInfoElement.textContent =
             formatDate(
                 startDate
             ) +
             ' → ' +
             formatDate(
-                currentEndDate
+                endDate
             );
     }
 
 
     /*
      * ----------------------------------------
-     * FUTURE 180 DAYS
+     * FUTURE DAYS
      * ----------------------------------------
      */
 
@@ -1239,90 +1534,91 @@
             '';
 
 
-        const futureStartDate =
-            addDays(
-                currentEndDate,
-                1
-            );
+        const results =
+            calculateFutureStatus();
 
 
-        const futureData = [];
-
-
-        /*
-         * Calculate each future date.
-         */
-
-        for (
-            let i = 0;
-            i < RANGE_LENGTH;
-            i++
-        ) {
-
-            const futureDate =
-                addDays(
-                    futureStartDate,
-                    i
-                );
-
-
-            /*
-             * How many consecutive days could
-             * we stay if we entered here?
-             */
-
-            const maximumStay =
-                getMaximumConsecutiveStay(
-                    futureDate
-                );
-
-
-            futureData.push({
-                date: futureDate,
-                maximumStay: maximumStay,
-                counter: i + 1
-            });
-        }
-
-
-        /*
-         * Render each future day.
-         */
-
-        futureData.forEach(
-            function (data) {
+        results.forEach(
+            function (result) {
 
                 const date =
-                    data.date;
+                    result.date;
 
 
-                const dateElement =
+                const futureDay =
                     document.createElement(
                         'div'
                     );
 
 
-                dateElement.className =
+                futureDay.className =
                     'future-day';
 
 
                 /*
-                 * Highlight genuine 90-day
-                 * starting points.
+                 * Apply status.
                  */
 
                 if (
-                    data.maximumStay >= 90
+                    result.status ===
+                    'green'
                 ) {
 
-                    dateElement.classList.add(
-                        'possible-start'
+                    futureDay.classList.add(
+                        'green'
+                    );
+
+                    futureDay.setAttribute(
+                        'data-tooltip',
+                        'You can legally remain in Schengen on this date.'
+                    );
+
+                }
+                else if (
+                    result.status ===
+                    'yellow'
+                ) {
+
+                    futureDay.classList.add(
+                        'reentry-illegal'
+                    );
+
+                    futureDay.setAttribute(
+                        'data-tooltip',
+                        'This re-entry date is not legal under the 90/180 rule.'
+                    );
+
+                }
+                else {
+
+                    futureDay.classList.add(
+                        'red'
+                    );
+
+                    futureDay.setAttribute(
+                        'data-tooltip',
+                        'You would need to have left Schengen before this date.'
                     );
                 }
 
 
                 /*
-                 * Weekday
+                 * Mark the actual re-entry date.
+                 */
+
+                if (
+                    dateToString(date) ===
+                    dateToString(reentryDate)
+                ) {
+
+                    futureDay.classList.add(
+                        'reentry'
+                    );
+                }
+
+
+                /*
+                 * Weekday.
                  */
 
                 const weekday =
@@ -1343,7 +1639,7 @@
 
 
                 /*
-                 * Date
+                 * Date.
                  */
 
                 const dateNumber =
@@ -1363,7 +1659,7 @@
 
 
                 /*
-                 * Year
+                 * Year.
                  */
 
                 const year =
@@ -1379,71 +1675,62 @@
 
 
                 /*
-                 * Maximum consecutive stay.
+                 * Status text.
                  */
 
-                const available =
+                const status =
                     document.createElement(
                         'div'
                     );
 
-                available.className =
-                    'available';
+                status.className =
+                    'status';
 
 
                 if (
-                    data.maximumStay === 0
+                    result.status ===
+                    'green'
                 ) {
 
-                    available.classList.add(
-                        'zero'
-                    );
+                    status.textContent =
+                        'OK';
+
+                }
+                else if (
+                    result.status ===
+                    'yellow'
+                ) {
+
+                    status.textContent =
+                        'RE-ENTRY';
+
+                }
+                else {
+
+                    status.textContent =
+                        'LEAVE';
                 }
 
 
-                available.textContent =
-                    data.maximumStay;
-
-
-                /*
-                 * Position counter.
-                 */
-
-                const counter =
-                    document.createElement(
-                        'div'
-                    );
-
-                counter.className =
-                    'future-counter';
-
-                counter.textContent =
-                    data.counter;
-
-
-                dateElement.appendChild(
+                futureDay.appendChild(
                     weekday
                 );
 
-                dateElement.appendChild(
+                futureDay.appendChild(
                     dateNumber
                 );
 
-                dateElement.appendChild(
+                futureDay.appendChild(
                     year
                 );
 
-                dateElement.appendChild(
-                    available
-                );
-
-                dateElement.appendChild(
-                    counter
+                futureDay.appendChild(
+                    status
                 );
 
 
                 futureDaysContainer.appendChild(
-                    dateElement
+                    futureDay
                 );
             }
         );
@@ -1452,12 +1739,81 @@
 
     /*
      * ----------------------------------------
-     * RANGE END DATE
+     * RENDER EVERYTHING
      * ----------------------------------------
      */
 
-    setEndDateButton.addEventListener(
+    function render() {
+
+        renderHistoricalDays();
+
+        renderSummary();
+
+        renderFutureDays();
+    }
+
+
+    /*
+     * ----------------------------------------
+     * CHANGE RE-ENTRY DATE
+     * ----------------------------------------
+     */
+
+    function changeReentryDate(days) {
+
+        reentryDate =
+            addDays(
+                reentryDate,
+                days
+            );
+
+
+        endDateInput.value =
+            dateToString(
+                reentryDate
+            );
+
+
+        lastClickedDate =
+            null;
+
+
+        saveReentryDate();
+
+        updateUrl();
+
+        render();
+    }
+
+
+    /*
+     * Arrow buttons.
+     */
+
+    previousDayButton.addEventListener(
         'click',
+        function () {
+
+            changeReentryDate(-1);
+        }
+    );
+
+
+    nextDayButton.addEventListener(
+        'click',
+        function () {
+
+            changeReentryDate(1);
+        }
+    );
+
+
+    /*
+     * Direct date input.
+     */
+
+    endDateInput.addEventListener(
+        'change',
         function () {
 
             if (
@@ -1468,18 +1824,17 @@
             }
 
 
-            currentEndDate =
+            reentryDate =
                 stringToDate(
                     endDateInput.value
                 );
 
 
-            saveEndDate();
-
-
             lastClickedDate =
                 null;
 
+
+            saveReentryDate();
 
             updateUrl();
 
@@ -1489,8 +1844,7 @@
 
 
     /*
-     * Pressing Enter also changes the
-     * range endpoint.
+     * Keyboard support for arrows.
      */
 
     endDateInput.addEventListener(
@@ -1498,10 +1852,21 @@
         function (event) {
 
             if (
-                event.key === 'Enter'
+                event.key === 'ArrowLeft'
             ) {
 
-                setEndDateButton.click();
+                event.preventDefault();
+
+                changeReentryDate(-1);
+
+            }
+            else if (
+                event.key === 'ArrowRight'
+            ) {
+
+                event.preventDefault();
+
+                changeReentryDate(1);
             }
         }
     );
@@ -1522,3 +1887,4 @@
 
 </body>
 </html>
+```
